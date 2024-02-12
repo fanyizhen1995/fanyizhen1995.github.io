@@ -2,386 +2,347 @@
 <html>
 <head>
   <meta charset="utf-8">
+  
+
+  
   <title>fanyizhen 的博客</title>
-  <meta name="keywords" content="">
-  <meta name="description" content="fanyizhen 的博客">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="description" content="本文是将原先发于知乎的琐碎文章进行整理总结。 RDMA 性能优化Tips and trick to optimize your RDMA code 笔记Tips and trick to optimize your RDMA code 笔记 原文来源于 RDMAmojo，该文章涵盖了优化 RDMA 时延、吞吐、资源占用等几个方面的优化技巧，非常实用，基本都能在日常开发中用得上。 还有其他 RDMA">
-<meta property="og:type" content="article">
-<meta property="og:title" content="RDMA 使用小总结">
-<meta property="og:url" content="https://fanyizhen1995.github.io/2024/02/12/Tips-and-trick-to-optimize-your-RDMA-code-%E7%AC%94%E8%AE%B0/index.html">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="fanyizhen 的博客">
+<meta property="og:url" content="https://fanyizhen1995.github.io/index.html">
 <meta property="og:site_name" content="fanyizhen 的博客">
-<meta property="og:description" content="本文是将原先发于知乎的琐碎文章进行整理总结。 RDMA 性能优化Tips and trick to optimize your RDMA code 笔记Tips and trick to optimize your RDMA code 笔记 原文来源于 RDMAmojo，该文章涵盖了优化 RDMA 时延、吞吐、资源占用等几个方面的优化技巧，非常实用，基本都能在日常开发中用得上。 还有其他 RDMA">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2024-02-12T12:16:22.000Z">
-<meta property="article:modified_time" content="2024-02-12T13:04:37.843Z">
 <meta property="article:author" content="Yizhen FAN">
-<meta property="article:tag" content="RDMA">
-<meta property="article:tag" content="性能优化">
 <meta name="twitter:card" content="summary">
-
-
-<link rel="icon" href="/img/fyz.jpeg">
-
-<link href="/css/style.css?v=1.1.0" rel="stylesheet">
-
-<link href="//cdn.jsdelivr.net/npm/animate.css@4.1.0/animate.min.css" rel="stylesheet">
-
-<script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
-<script src="/js/titleTip.js?v=1.1.0" ></script>
-
-<script src="//cdn.jsdelivr.net/npm/highlightjs@9.16.2/highlight.pack.min.js"></script>
-<script>
-    hljs.initHighlightingOnLoad();
-</script>
-
-<script src="//cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
-
-
-
-<script src="//cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.min.js" ></script>
-
-<script src="/js/iconfont.js?v=1.1.0" ></script>
+  
+    <link rel="alternate" href="/atom.xml" title="fanyizhen 的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
 
 <meta name="generator" content="Hexo 7.1.1"></head>
-<div style="display: none">
-  <input class="theme_disqus_on" value="false">
-  <input class="theme_preload_comment" value="">
-  <input class="theme_blog_path" value="">
-  <input id="theme_shortcut" value="true" />
-  <input id="theme_highlight_on" value="false" />
-  <input id="theme_code_copy" value="true" />
-</div>
-
-
 
 <body>
-<aside class="nav mobile">
-    <div class="nav-left">
-        <a href="/"
-   class="avatar_target">
-    <img class="avatar"
-         src="/img/fyz.jpeg"/>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">fanyizhen 的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://fanyizhen1995.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-Tips-and-trick-to-optimize-your-RDMA-code-笔记" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2024/02/12/Tips-and-trick-to-optimize-your-RDMA-code-%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time datetime="2024-02-12T12:16:22.000Z" itemprop="datePublished">2024-02-12</time>
 </a>
-<div class="author">
-    <span>Yizhen FAN</span>
-</div>
-
-<div class="icon">
     
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
         
-            <a title="github"
-               href="https://github.com/fanyizhen1995"
-               target="_blank">
-                
-                    <svg class="iconfont-svg" aria-hidden="true">
-                        <use xlink:href="#icon-github"></use>
-                    </svg>
-                
-            </a>
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2024/02/12/Tips-and-trick-to-optimize-your-RDMA-code-%E7%AC%94%E8%AE%B0/">RDMA 使用小总结</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文是将原先发于知乎的琐碎文章进行整理总结。</p>
+<h1 id="RDMA-性能优化"><a href="#RDMA-性能优化" class="headerlink" title="RDMA 性能优化"></a>RDMA 性能优化</h1><h2 id="Tips-and-trick-to-optimize-your-RDMA-code-笔记"><a href="#Tips-and-trick-to-optimize-your-RDMA-code-笔记" class="headerlink" title="Tips and trick to optimize your RDMA code 笔记"></a>Tips and trick to optimize your RDMA code 笔记</h2><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/627396953">Tips and trick to optimize your RDMA code 笔记</a></p>
+<p>原文来源于 <a target="_blank" rel="noopener" href="https://www.rdmamojo.com/2013/06/08/tips-and-tricks-to-optimize-your-rdma-code/">RDMAmojo</a>，该文章涵盖了优化 RDMA 时延、吞吐、资源占用等几个方面的优化技巧，非常实用，基本都能在日常开发中用得上。</p>
+<h2 id="还有其他-RDMA-相关的优化手段么？"><a href="#还有其他-RDMA-相关的优化手段么？" class="headerlink" title="还有其他 RDMA 相关的优化手段么？"></a>还有其他 RDMA 相关的优化手段么？</h2><p>优化 RDMA 收发包的大小，尽量减少包的大小，消除冗余信息的传输。</p>
+<h2 id="然而。。"><a href="#然而。。" class="headerlink" title="然而。。"></a>然而。。</h2><p>然而单纯从 RDMA 使用角度优化代码是有极限的：RDMA 本身是微秒级速度的程序。如果程序本身有其他影响性能的因素，会产生毫秒或者秒级别的性能劣化，那再怎么优化 RDMA 的使用也无力挽回大局。</p>
+<p>除非将程序本身的优化也一并考虑在内，全方位地考虑将所有优化手段一并考虑在内，这样才能超越极限！</p>
+<h1 id="RDMA-read-和-write-的使用思路上的区别"><a href="#RDMA-read-和-write-的使用思路上的区别" class="headerlink" title="RDMA read 和 write 的使用思路上的区别"></a>RDMA read 和 write 的使用思路上的区别</h1><p>以 C&#x2F;S 结构中，client 需要获取 server 的数据这一场景为例。<br>Read 操作是最直观的，client 直接 read 回来 server 侧指定位置的数据。如果 Server 侧数据是分开存储的情况下，Client 可能需要多次 read 操作。<br>Write 操作则是 client 往 server 发送了一个请求后，server 通过 write 来将数据写到 client 侧指定位置。好处是 server 知道自己的数据在哪，因此只需要一次 write。但是 client 需要能够感知到数据被写过来了，这就需要通过比如 client 定期轮询 buffer，通过标识位来判断是否有新数据被写入，server 已经把数据传完。或者通过 write_imm 中的立即数来通知。<br>总的来说，两者起码都是需要 1 rtt，read 可能比 write 多几个 rtt。write 相比 read 来说，需要 server 侧介入。两者是一个 server 侧 cpu 负载和时延&#x2F;吞吐之间的权衡。</p>
+<h1 id="RDMA-write-的写入顺序"><a href="#RDMA-write-的写入顺序" class="headerlink" title="RDMA write 的写入顺序"></a>RDMA write 的写入顺序</h1><p>对于 RDMA write 来说，RDMA 和 IB 规格书上没写写入的顺序一定是按照顺序来写入的，但大部分厂商的实现方式是顺序写入。所以当接收方读到写入的最后一位时，就基本可以认为数据已经传输完成了。</p>
+<h1 id="RDMA-send-recv-之思"><a href="#RDMA-send-recv-之思" class="headerlink" title="RDMA send&#x2F;recv 之思"></a>RDMA send&#x2F;recv 之思</h1><p>消息语义（send&#x2F;recv）需要提前准备好一定数量的 recv。并且在运行过程中还需要持续不断地补充新的 recv，比如收到一个 send 就补充一个 recv。Send 的速率不同，需要提前准备的 recv 数量就不同，不然就可能存在 send 超时导致的失败。<br>结合许多论文中所说的，用 write 的效果会更好来看，RDMA 真正的用法应该是 READ&#x2F;WRITE 这种单边语义，思考怎么用的时候应该尽量往这方面去靠，才能最大地发挥出 RDMA 的特色。<br>SEND&#x2F;RECV 的用法，能想到的，是需要简单的设计一下的时候，因为消息语义用法较简单，平替 SOCKET 比较容易。内存语义在设计的时候就要考虑更多，设计起来更难。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://fanyizhen1995.github.io/2024/02/12/Tips-and-trick-to-optimize-your-RDMA-code-%E7%AC%94%E8%AE%B0/" data-id="clsiyc0sx0001ut6g0l8u0awc" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RDMA/" rel="tag">RDMA</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2022/09/03/hello-world/" class="article-date">
+  <time datetime="2022-09-03T13:45:02.288Z" itemprop="datePublished">2022-09-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
         
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2022/09/03/hello-world/">Hello World</a>
+    </h1>
+  
+
+      </header>
     
-</div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://fanyizhen1995.github.io/2022/09/03/hello-world/" data-id="clsiyc0sq0000ut6g4db32zy1" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
 
 
-
-
-
-<ul>
-    <li>
-        <div class="all active" data-rel="All">All
-            
-                <small>(3)</small>
-            
-        </div>
-    </li>
+  
+    <article id="post-how-to-write-a-simple-hashmap" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/12/27/how-to-write-a-simple-hashmap/" class="article-date">
+  <time datetime="2019-12-27T07:35:54.000Z" itemprop="datePublished">2019-12-27</time>
+</a>
     
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/12/27/how-to-write-a-simple-hashmap/">如何实现一个简单的 HashMap</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>HashMap 是个 <code>LinkedList&lt;HashMapEntry&lt;K, V&gt;&gt;[]</code>, 或 <code>TreeNode&lt;HashMapEntry&lt;K, V&gt;&gt;[]</code></p>
+<h3 id="1-实现-HashMapEntry"><a href="#1-实现-HashMapEntry" class="headerlink" title="1. 实现 HashMapEntry"></a>1. 实现 HashMapEntry</h3><ul>
+<li>顺便重写下 equal 和 hashcode</li>
 </ul>
-<div class="left-bottom">
-    <div class="menus">
-        
-            
-            
-            
-    </div>
-    <div>
-        
-        
-    </div>
-</div>
-<input type="hidden" id="yelog_site_posts_number" value="3">
+<h3 id="2-实现-HashMap-的方法"><a href="#2-实现-HashMap-的方法" class="headerlink" title="2. 实现 HashMap 的方法"></a>2. 实现 HashMap 的方法</h3><ul>
+<li>hash()：计算hash</li>
+<li>get()：在相应的 <code>table[hash(key)]</code> 中寻找相应的值</li>
+<li>put(): 考虑要不要 resize</li>
+<li>resize(): 扩充 hashmap</li>
+<li>remove()</li>
+<li>其他可选方法，如 clone，replace 等</li>
+</ul>
+<h3 id="3-考虑并行操作异常"><a href="#3-考虑并行操作异常" class="headerlink" title="3. 考虑并行操作异常"></a>3. 考虑并行操作异常</h3><ul>
+<li>在增删改方法添加 modCount 计数，抛出 ConcurrentModificationException 异常</li>
+</ul>
+<h3 id="4-考虑遍历：EntrySet"><a href="#4-考虑遍历：EntrySet" class="headerlink" title="4. 考虑遍历：EntrySet"></a>4. 考虑遍历：EntrySet</h3><ul>
+<li><p>先实现 Iterator 类</p>
+<ul>
+<li>实现 hasNext，next</li>
+</ul>
+</li>
+<li><p>实现 EntrySet 类</p>
+<ul>
+<li>iterator()</li>
+<li>contain()</li>
+<li>remove()</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-考虑树化"><a href="#5-考虑树化" class="headerlink" title="5. 考虑树化"></a>5. 考虑树化</h3><ul>
+<li>在 put 和 remove 中添加符合树化条件的情况，和从树转换回链表的情况</li>
+<li>实现 TreeNode 类 (具体实现再议)</li>
+</ul>
 
-<div style="display: none">
-    <span id="busuanzi_value_site_uv"></span>
-    <span id="busuanzi_value_site_pv"></span>
-</div>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/" data-id="clsiyc0t00002ut6g1vh53cxt" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/java%E5%9F%BA%E7%A1%80/" rel="tag">java基础</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">数据结构</a></li></ul>
 
-    </div>
-    <div class="nav-right">
-        <div class="friends-area">
-    <div class="friends-title">
-        Links
-        <i class="iconfont icon-left"></i>
-    </div>
-    <div class="friends-content">
-        <ul>
-            
-            <li><a target="_blank" href="http://yelog.org/">叶落阁</a></li>
-            
-        </ul>
-    </div>
-</div>
-        <div class="title-list">
-    <div class="right-top">
-        <div id="default-panel">
-            <i class="iconfont icon-search" data-title="搜索 快捷键 i"></i>
-            <div class="right-title">All</div>
-            <i class="iconfont icon-file-tree" data-title="切换到大纲视图 快捷键 w"></i>
-        </div>
-        <div id="search-panel">
-            <i class="iconfont icon-left" data-title="返回"></i>
-            <input id="local-search-input" autocomplete="off"/>
-            <label class="border-line" for="input"></label>
-            <i class="iconfont icon-case-sensitive" data-title="大小写敏感"></i>
-            <i class="iconfont icon-tag" data-title="标签"></i>
-        </div>
-        <div id="outline-panel" style="display: none">
-            <div class="right-title">大纲</div>
-            <i class="iconfont icon-list" data-title="切换到文章列表"></i>
-        </div>
-    </div>
+    </footer>
+  </div>
+  
+</article>
 
-    <div class="tags-list">
-    <input id="tag-search" />
-    <div class="tag-wrapper">
-        
-            <li class="article-tag-list-item">
-                <i class="iconfont icon-tag"></i><a>数据结构</a>
-            </li>
-        
-            <li class="article-tag-list-item">
-                <i class="iconfont icon-tag"></i><a>性能优化</a>
-            </li>
-        
-            <li class="article-tag-list-item">
-                <i class="iconfont icon-tag"></i><a>java基础</a>
-            </li>
-        
-            <li class="article-tag-list-item">
-                <i class="iconfont icon-tag"></i><a>RDMA</a>
-            </li>
-        
-    </div>
 
-</div>
+  
 
+
+</section>
+        
+          <aside id="sidebar">
+  
     
-    <nav id="title-list-nav">
-        
-        
-        <a  class="All "
-           href="/2024/02/12/Tips-and-trick-to-optimize-your-RDMA-code-%E7%AC%94%E8%AE%B0/"
-           data-tag="RDMA,性能优化"
-           data-author="" >
-            <span class="post-title" title="RDMA 使用小总结">RDMA 使用小总结</span>
-            <span class="post-date" title="2024-02-12 20:16:22">2024/02/12</span>
-        </a>
-        
-        
-        <a  class="All "
-           href="/2022/09/03/hello-world/"
-           data-tag=""
-           data-author="" >
-            <span class="post-title" title="Hello World">Hello World</span>
-            <span class="post-date" title="2022-09-03 21:45:02">2022/09/03</span>
-        </a>
-        
-        
-        <a  class="All "
-           href="/2019/12/27/how-to-write-a-simple-hashmap/"
-           data-tag="java基础,数据结构"
-           data-author="" >
-            <span class="post-title" title="如何实现一个简单的 HashMap">如何实现一个简单的 HashMap</span>
-            <span class="post-date" title="2019-12-27 15:35:54">2019/12/27</span>
-        </a>
-        
-        <div id="no-item-tips">
 
-        </div>
-    </nav>
-    <div id="outline-list">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/RDMA/" rel="tag">RDMA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java%E5%9F%BA%E7%A1%80/" rel="tag">java基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">数据结构</a></li></ul>
     </div>
-</div>
+  </div>
 
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/RDMA/" style="font-size: 10px;">RDMA</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 10px;">性能优化</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a>
     </div>
-    <div class="hide-list">
-        <div class="semicircle" data-title="切换全屏 快捷键 s">
-            <div class="brackets first"><</div>
-            <div class="brackets">&gt;</div>
-        </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/02/">February 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/09/">September 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li></ul>
     </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/02/12/Tips-and-trick-to-optimize-your-RDMA-code-%E7%AC%94%E8%AE%B0/">RDMA 使用小总结</a>
+          </li>
+        
+          <li>
+            <a href="/2022/09/03/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2019/12/27/how-to-write-a-simple-hashmap/">如何实现一个简单的 HashMap</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
 </aside>
-<div id="post" class="index">
-    <div class="pjax">
-        <article class="index">
-            <div class="toc-ref">
-    
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#FYZ-%E7%9A%84%E5%8D%9A%E5%AE%A2"><span class="toc-text">FYZ 的博客</span></a></li></ol>
-    
-<style>
-    .left-col .switch-btn,
-    .left-col .switch-area {
-        display: none;
-    }
-    .toc-level-3 i,
-    .toc-level-3 ol {
-        display: none !important;
-    }
-</style>
-</div>
-            <h2 id="FYZ-的博客"><a href="#FYZ-的博客" class="headerlink" title="FYZ 的博客"></a>FYZ 的博客</h2><p>博客历经多年荒废，现在重新拾起，随便写写。</p>
-<p>到目前为止已经写了<code class="article_number"></code>篇文章。</p>
-
-        </article>
         
-        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2024 Yizhen FAN<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
-    <div class="copyright">
-        <p class="footer-entry">
-    ©2019-2024 Fanyizhen
-</p>
-<p class="footer-entry">Built with <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/yelog/hexo-theme-3-hexo" target="_blank">3-hexo</a> theme</p>
+    
+      <!-- 不蒜子统计 -->
+      <span id="busuanzi_container_site_pv" class="inner">
+              访问量：<span id="busuanzi_value_site_pv"></span>        
+      </span>
+      <span id="busuanzi_container_site_uv" class="inner">
+        访客数：<span id="busuanzi_value_site_uv"></span>        
+      </span>
 
+      <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+
+  </div>
+</footer>
     </div>
-</div>
-<div class="full-toc">
-    <button class="full" data-title="切换全屏 快捷键 s"><span class="min "></span></button>
-<a class="" id="rocket" ></a>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
 
-</div>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+  <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 </body>
-<script src="/js/jquery.pjax.js?v=1.1.0" ></script>
-
-<script src="/js/script.js?v=1.1.0" ></script>
-<script>
-    var img_resize = 'default';
-    function initArticle() {
-        /*渲染对应的表格样式*/
-        
-            $("#post .pjax table").addClass("green_title");
-        
-
-        /*渲染打赏样式*/
-        
-
-        /*高亮代码块行号*/
-        
-
-        /*访问数量*/
-        
-        $.getScript("//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js");
-        
-
-        /*代码高亮，行号对齐*/
-        $('.pre-numbering').css('line-height',$('.has-numbering').css('line-height'));
-
-        
-        
-    }
-
-    /*打赏页面隐藏与展示*/
-    
-
-</script>
-
-<!--加入行号的高亮代码块样式-->
-
-<!--自定义样式设置-->
-<style>
-    
-    
-    .nav {
-        width: 542px;
-    }
-    .nav.fullscreen {
-        margin-left: -542px;
-    }
-    .nav-left {
-        width: 120px;
-    }
-    
-    
-    @media screen and (max-width: 1468px) {
-        .nav {
-            width: 492px;
-        }
-        .nav.fullscreen {
-            margin-left: -492px;
-        }
-        .nav-left {
-            width: 100px;
-        }
-    }
-    
-    
-    @media screen and (max-width: 1024px) {
-        .nav {
-            width: 492px;
-            margin-left: -492px
-        }
-        .nav.fullscreen {
-            margin-left: 0;
-        }
-    }
-    
-    @media screen and (max-width: 426px) {
-        .nav {
-            width: 100%;
-        }
-        .nav-left {
-            width: 100%;
-        }
-    }
-    
-    
-    .nav-right .title-list nav a .post-title, .nav-right .title-list #local-search-result a .post-title {
-        color: #383636;
-    }
-    
-    
-    .nav-right .title-list nav a .post-date, .nav-right .title-list #local-search-result a .post-date {
-        color: #5e5e5f;
-    }
-    
-    
-    .nav-right nav a.hover, #local-search-result a.hover{
-        background-color: #e2e0e0;
-    }
-    
-    
-
-    /*列表样式*/
-    
-
-    /* 背景图样式 */
-    
-    
-
-
-    /*引用块样式*/
-    
-
-    /*文章列表背景图*/
-    
-
-    
-</style>
-
-
-
-
-
-
 
 </html>
