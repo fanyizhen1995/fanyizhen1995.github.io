@@ -2,9 +2,9 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Hello World | fanyizhen 的博客</title>
-  <meta name="keywords" content="">
-  <meta name="description" content="Hello World | fanyizhen 的博客">
+  <title>RDMA 使用小总结 | fanyizhen 的博客</title>
+  <meta name="keywords" content=" RDMA , 性能优化 ">
+  <meta name="description" content="RDMA 使用小总结 | fanyizhen 的博客">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="description" content="本文是将原先发于知乎的琐碎文章进行整理总结。 RDMA 性能优化Tips and trick to optimize your RDMA code 笔记Tips and trick to optimize your RDMA code 笔记 原文来源于 RDMAmojo，该文章涵盖了优化 RDMA 时延、吞吐、资源占用等几个方面的优化技巧，非常实用，基本都能在日常开发中用得上。 还有其他 RDMA">
 <meta property="og:type" content="article">
@@ -223,19 +223,28 @@
 </aside>
 <div id="post">
     <div class="pjax">
-        <article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
+        <article id="post-Tips-and-trick-to-optimize-your-RDMA-code-笔记" class="article article-type-post" itemscope itemprop="blogPost">
     
-        <h1 class="article-title">Hello World</h1>
+        <h1 class="article-title">RDMA 使用小总结</h1>
     
     <div class="article-meta">
         
         
         
+        
+        <span class="tag">
+            <i class="iconfont icon-tag"></i>
+            
+            <a class="color5">RDMA</a>
+            
+            <a class="color5">性能优化</a>
+            
+        </span>
         
     </div>
     <div class="article-meta">
         
-            Created At : <time class="date" title='Updated At: 2022-09-03 21:45:02'>2022-09-03 21:45</time>
+            Created At : <time class="date" title='Updated At: 2024-02-12 21:04:37'>2024-02-12 20:16</time>
         
     </div>
     <div class="article-meta">
@@ -257,7 +266,7 @@
     
     <div class="toc-ref">
     
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Quick-Start"><span class="toc-text">Quick Start</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Create-a-new-post"><span class="toc-text">Create a new post</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Run-server"><span class="toc-text">Run server</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Generate-static-files"><span class="toc-text">Generate static files</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Deploy-to-remote-sites"><span class="toc-text">Deploy to remote sites</span></a></li></ol></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#RDMA-%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="toc-text">RDMA 性能优化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Tips-and-trick-to-optimize-your-RDMA-code-%E7%AC%94%E8%AE%B0"><span class="toc-text">Tips and trick to optimize your RDMA code 笔记</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%98%E6%9C%89%E5%85%B6%E4%BB%96-RDMA-%E7%9B%B8%E5%85%B3%E7%9A%84%E4%BC%98%E5%8C%96%E6%89%8B%E6%AE%B5%E4%B9%88%EF%BC%9F"><span class="toc-text">还有其他 RDMA 相关的优化手段么？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%84%B6%E8%80%8C%E3%80%82%E3%80%82"><span class="toc-text">然而。。</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#RDMA-read-%E5%92%8C-write-%E7%9A%84%E4%BD%BF%E7%94%A8%E6%80%9D%E8%B7%AF%E4%B8%8A%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-text">RDMA read 和 write 的使用思路上的区别</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#RDMA-write-%E7%9A%84%E5%86%99%E5%85%A5%E9%A1%BA%E5%BA%8F"><span class="toc-text">RDMA write 的写入顺序</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#RDMA-send-recv-%E4%B9%8B%E6%80%9D"><span class="toc-text">RDMA send&#x2F;recv 之思</span></a></li></ol>
     
 <style>
     .left-col .switch-btn,
@@ -273,19 +282,15 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+        <p>本文是将原先发于知乎的琐碎文章进行整理总结。</p>
+<h1 id="RDMA-性能优化"><a href="#RDMA-性能优化" class="headerlink" title="RDMA 性能优化"></a>RDMA 性能优化</h1><h2 id="Tips-and-trick-to-optimize-your-RDMA-code-笔记"><a href="#Tips-and-trick-to-optimize-your-RDMA-code-笔记" class="headerlink" title="Tips and trick to optimize your RDMA code 笔记"></a>Tips and trick to optimize your RDMA code 笔记</h2><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/627396953">Tips and trick to optimize your RDMA code 笔记</a></p>
+<p>原文来源于 <a target="_blank" rel="noopener" href="https://www.rdmamojo.com/2013/06/08/tips-and-tricks-to-optimize-your-rdma-code/">RDMAmojo</a>，该文章涵盖了优化 RDMA 时延、吞吐、资源占用等几个方面的优化技巧，非常实用，基本都能在日常开发中用得上。</p>
+<h2 id="还有其他-RDMA-相关的优化手段么？"><a href="#还有其他-RDMA-相关的优化手段么？" class="headerlink" title="还有其他 RDMA 相关的优化手段么？"></a>还有其他 RDMA 相关的优化手段么？</h2><p>优化 RDMA 收发包的大小，尽量减少包的大小，消除冗余信息的传输。</p>
+<h2 id="然而。。"><a href="#然而。。" class="headerlink" title="然而。。"></a>然而。。</h2><p>然而单纯从 RDMA 使用角度优化代码是有极限的：RDMA 本身是微秒级速度的程序。如果程序本身有其他影响性能的因素，会产生毫秒或者秒级别的性能劣化，那再怎么优化 RDMA 的使用也无力挽回大局。</p>
+<p>除非将程序本身的优化也一并考虑在内，全方位地考虑将所有优化手段一并考虑在内，这样才能超越极限！</p>
+<h1 id="RDMA-read-和-write-的使用思路上的区别"><a href="#RDMA-read-和-write-的使用思路上的区别" class="headerlink" title="RDMA read 和 write 的使用思路上的区别"></a>RDMA read 和 write 的使用思路上的区别</h1><p>以 C&#x2F;S 结构中，client 需要获取 server 的数据这一场景为例。<br>Read 操作是最直观的，client 直接 read 回来 server 侧指定位置的数据。如果 Server 侧数据是分开存储的情况下，Client 可能需要多次 read 操作。<br>Write 操作则是 client 往 server 发送了一个请求后，server 通过 write 来将数据写到 client 侧指定位置。好处是 server 知道自己的数据在哪，因此只需要一次 write。但是 client 需要能够感知到数据被写过来了，这就需要通过比如 client 定期轮询 buffer，通过标识位来判断是否有新数据被写入，server 已经把数据传完。或者通过 write_imm 中的立即数来通知。<br>总的来说，两者起码都是需要 1 rtt，read 可能比 write 多几个 rtt。write 相比 read 来说，需要 server 侧介入。两者是一个 server 侧 cpu 负载和时延&#x2F;吞吐之间的权衡。</p>
+<h1 id="RDMA-write-的写入顺序"><a href="#RDMA-write-的写入顺序" class="headerlink" title="RDMA write 的写入顺序"></a>RDMA write 的写入顺序</h1><p>对于 RDMA write 来说，RDMA 和 IB 规格书上没写写入的顺序一定是按照顺序来写入的，但大部分厂商的实现方式是顺序写入。所以当接收方读到写入的最后一位时，就基本可以认为数据已经传输完成了。</p>
+<h1 id="RDMA-send-recv-之思"><a href="#RDMA-send-recv-之思" class="headerlink" title="RDMA send&#x2F;recv 之思"></a>RDMA send&#x2F;recv 之思</h1><p>消息语义（send&#x2F;recv）需要提前准备好一定数量的 recv。并且在运行过程中还需要持续不断地补充新的 recv，比如收到一个 send 就补充一个 recv。Send 的速率不同，需要提前准备的 recv 数量就不同，不然就可能存在 send 超时导致的失败。<br>结合许多论文中所说的，用 write 的效果会更好来看，RDMA 真正的用法应该是 READ&#x2F;WRITE 这种单边语义，思考怎么用的时候应该尽量往这方面去靠，才能最大地发挥出 RDMA 的特色。<br>SEND&#x2F;RECV 的用法，能想到的，是需要简单的设计一下的时候，因为消息语义用法较简单，平替 SOCKET 比较容易。内存语义在设计的时候就要考虑更多，设计起来更难。</p>
 
       
        <hr><span style="font-style: italic;color: gray;"> 转载请注明来源，欢迎对文章中的引用来源进行考证，欢迎指出任何有错误或不够清晰的表达。 </span>
