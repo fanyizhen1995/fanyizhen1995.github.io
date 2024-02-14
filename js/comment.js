@@ -1,4 +1,4 @@
-// import md5 from 'blueimp-md5';
+import md5 from 'blueimp-md5';
 
 (function ($){
   const dom = (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]);
@@ -29,7 +29,7 @@
 
   // 用于 id 前缀，防止 md5 之后的值相同
   const date = jsNode.getAttribute('data-date') || '';
-  const id = date + '-' + path;
+  const id = date + '-' + md5(path);
 
 //   console.log("id: " + id);
 
