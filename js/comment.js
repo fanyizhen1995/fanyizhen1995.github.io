@@ -1,7 +1,6 @@
 // import md5 from 'blueimp-md5';
 
-(function (){
-
+(function ($){
   const dom = (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]);
   // 装评论模块的盒子
   const node = document.getElementById('gitalk_container');
@@ -24,7 +23,6 @@
   const owner = jsNode.getAttribute('data-owner');
   let admin = jsNode.getAttribute('data-admin');
   const path = jsNode.getAttribute('data-path') || '';
-
   if (!js || !css || !clientID || !clientSecret || !repo || !owner || !admin || !path) {
     return;
   }
@@ -33,7 +31,7 @@
   const date = jsNode.getAttribute('data-date') || '';
   const id = date + '-' + path;
 
-  console.log("id: " + id);
+//   console.log("id: " + id);
 
   // 用于处理配置的 admin 字段不是字符串，是数组情况
   try {
