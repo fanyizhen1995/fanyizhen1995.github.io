@@ -1,4 +1,4 @@
-import md5 from 'blueimp-md5';
+// import md5 from 'blueimp-md5';
 
 (function (){
 
@@ -31,7 +31,9 @@ import md5 from 'blueimp-md5';
 
   // 用于 id 前缀，防止 md5 之后的值相同
   const date = jsNode.getAttribute('data-date') || '';
-  const id = date + '-' + md5(path);
+  const id = date + '-' + path;
+
+  console.log("id: " + id);
 
   // 用于处理配置的 admin 字段不是字符串，是数组情况
   try {
