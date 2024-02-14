@@ -28,7 +28,7 @@
 
   // 用于 id 前缀，防止 md5 之后的值相同
   const date = jsNode.getAttribute('data-date') || '';
-  const id = date + '-' + path.substring(0, 15);
+  const id = date + '-' + path.substring(0, 30);
 
 //   console.log("id: " + id);
 
