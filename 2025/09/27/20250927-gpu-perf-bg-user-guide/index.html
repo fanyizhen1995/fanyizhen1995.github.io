@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>GPU Performance Background User&#39;s Guide 笔记 | fanyizhen 的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="简介GPU Performance Background User’s Guide 是英伟达官方写的性能优化背景知识指南。主要介绍了以下几方面内容：  GPU 基本架构 GPU 执行模型 如何评估是 compute bound 还是 memory bound ？ 评估深度学习中常见算子  GPU 基本架构  如何计算计算操作的吞吐率 FLOPS：SM 核数量 * SM 核主频 * 表格中某种类型操">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GPU Performance Background User&#39;s Guide 笔记">
+<meta property="og:url" content="https://fanyizhen1995.github.io/2025/09/27/20250927-gpu-perf-bg-user-guide/index.html">
+<meta property="og:site_name" content="fanyizhen 的博客">
+<meta property="og:description" content="简介GPU Performance Background User’s Guide 是英伟达官方写的性能优化背景知识指南。主要介绍了以下几方面内容：  GPU 基本架构 GPU 执行模型 如何评估是 compute bound 还是 memory bound ？ 评估深度学习中常见算子  GPU 基本架构  如何计算计算操作的吞吐率 FLOPS：SM 核数量 * SM 核主频 * 表格中某种类型操">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://fanyizhen1995.github.io/20250927-gpu-perf-bg-user-guide/gpu.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/20250927-gpu-perf-bg-user-guide/multi-add-op.svg">
+<meta property="og:image" content="https://fanyizhen1995.github.io/20250927-gpu-perf-bg-user-guide/utilize-8sm-gpu.svg">
+<meta property="og:image" content="https://fanyizhen1995.github.io/20250927-gpu-perf-bg-user-guide/dl-bound.png">
+<meta property="article:published_time" content="2025-09-27T07:38:09.000Z">
+<meta property="article:modified_time" content="2025-09-27T09:23:18.980Z">
+<meta property="article:author" content="Yizhen FAN">
+<meta property="article:tag" content="性能优化">
+<meta property="article:tag" content="nvidia">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://fanyizhen1995.github.io/20250927-gpu-perf-bg-user-guide/gpu.png">
+  
+    <link rel="alternate" href="/atom.xml" title="fanyizhen 的博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">fanyizhen 的博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://fanyizhen1995.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-20250927-gpu-perf-bg-user-guide" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2025/09/27/20250927-gpu-perf-bg-user-guide/" class="article-date">
+  <time datetime="2025-09-27T07:38:09.000Z" itemprop="datePublished">2025-09-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      GPU Performance Background User&#39;s Guide 笔记
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p><a target="_blank" rel="noopener" href="https://docs.nvidia.com/deeplearning/performance/dl-performance-gpu-background/index.html">GPU Performance Background User’s Guide</a> 是英伟达官方写的性能优化背景知识指南。主要介绍了以下几方面内容：</p>
+<ul>
+<li>GPU 基本架构</li>
+<li>GPU 执行模型</li>
+<li>如何评估是 compute bound 还是 memory bound ？</li>
+<li>评估深度学习中常见算子</li>
+</ul>
+<h2 id="GPU-基本架构"><a href="#GPU-基本架构" class="headerlink" title="GPU 基本架构"></a>GPU 基本架构</h2><p><img src="/./20250927-gpu-perf-bg-user-guide/gpu.png" alt="GPU 架构简化视图"></p>
+<p><img src="/./20250927-gpu-perf-bg-user-guide/multi-add-op.svg" alt="每个 SM 每个时钟的乘加运算"></p>
+<p>如何计算计算操作的吞吐率 FLOPS：SM 核数量 * SM 核主频 * 表格中某种类型操作每个时钟周期的乘加运算数量 * 2（乘+加）</p>
+<p><em>example：</em> A100 TF32 FLOPS &#x3D; 1.41 GHz * 108 SM * 512 * 2 ≈ 156 TFLOPS</p>
+<p>图中 SM 核分为 CUDA Cores 和 Tensor Cores，Tensor cores 可以用来对小矩阵块进行操作。非矩阵操作则还是通过 CUDA Cores 来执行</p>
+<h2 id="GPU-执行模型"><a href="#GPU-执行模型" class="headerlink" title="GPU 执行模型"></a>GPU 执行模型</h2><p>因此 GPU 会将计算任务划分成多个 thread-block，每个 thread-block 交给不同 SM 核并发执行。每组并发执行的 thread block 被称为 “wave”。</p>
+<p>可能会存在尾部效应，即最后一组任务用不满 SM 核。所以线程块数量最好是 SM 核的数倍，以满足足够的并行计算利用率。</p>
+<p><img src="/./20250927-gpu-perf-bg-user-guide/utilize-8sm-gpu.svg"></p>
+<h2 id="评估性能瓶颈"><a href="#评估性能瓶颈" class="headerlink" title="评估性能瓶颈"></a>评估性能瓶颈</h2><p>给定一个简化的计算场景：一个函数从内存读取输入，执行计算，将输出写入内存。</p>
+<p>计算耗时：T<sub>math</sub> &#x3D; ops &#x2F; BW<sub>math</sub></p>
+<p>内存IO耗时：T<sub>mem</sub> &#x3D; bytes &#x2F; BW<sub>mem</sub></p>
+<p>Compute bound 场景（反之则为 memory bound）: </p>
+<p>T<sub>math</sub> &gt; T<sub>mem</sub></p>
+<p>ops &#x2F; BW<sub>math</sub> &gt; bytes &#x2F; BW<sub>mem</sub></p>
+<p>ops &#x2F; bytes &gt; BW<sub>math</sub> &#x2F; BW<sub>mem</sub></p>
+<p><em>ops &#x2F; bytes 通常被称为 Arithmetic Intensity，<br>右侧则是规格参数之比</em></p>
+<h2 id="评估深度学习中常见算子"><a href="#评估深度学习中常见算子" class="headerlink" title="评估深度学习中常见算子"></a>评估深度学习中常见算子</h2><p><img src="/./20250927-gpu-perf-bg-user-guide/dl-bound.png" alt="Deeplearning 常见算子性能瓶颈"></p>
+<h2 id="总结评估瓶颈的步骤"><a href="#总结评估瓶颈的步骤" class="headerlink" title="总结评估瓶颈的步骤"></a>总结评估瓶颈的步骤</h2><ol>
+<li><p>查 GPU 规格，还有算子操作数，输入输出大小</p>
+</li>
+<li><p>计算 Arithmetic Intensity</p>
+</li>
+<li><p>估算 thread block 数量和大小。如果 tb 至少比 SM 数量高出大约 4 倍，且每个线程块由几百个线程组成，则并行度很可能够了。</p>
+</li>
+</ol>
+<p>瓶颈相关关键词：计算并行性、compute bound、memory bound</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://fanyizhen1995.github.io/2025/09/27/20250927-gpu-perf-bg-user-guide/" data-id="cmg22d47r00003cgl57s4a0li" class="article-share-link">Share</a>
+      
+        <a href="https://fanyizhen1995.github.io/2025/09/27/20250927-gpu-perf-bg-user-guide/#gitalk_container" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2025/09/24/favorite_site/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">工具网页收藏</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="gitalk_container">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//gitalk.github.io/">comments powered by GITALK.</a></noscript>
+  </div>
+</section>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/RDMA/" rel="tag">RDMA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java%E5%9F%BA%E7%A1%80/" rel="tag">java基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">数据结构</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/RDMA/" style="font-size: 20px;">RDMA</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/nvidia/" style="font-size: 20px;">nvidia</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 10px;">工具</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 20px;">性能优化</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/09/">September 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/02/">February 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/09/27/20250927-gpu-perf-bg-user-guide/">GPU Performance Background User&#39;s Guide 笔记</a>
+          </li>
+        
+          <li>
+            <a href="/2025/09/24/favorite_site/">工具网页收藏</a>
+          </li>
+        
+          <li>
+            <a href="/2025/09/23/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2024/02/12/Tips-and-trick-to-optimize-your-RDMA-code-%E7%AC%94%E8%AE%B0/">RDMA 使用小总结</a>
+          </li>
+        
+          <li>
+            <a href="/2019/12/27/how-to-write-a-simple-hashmap/">如何实现一个简单的 HashMap</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2025 Yizhen FAN<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+    
+      <!-- 不蒜子统计 -->
+      <span id="busuanzi_container_site_pv" class="inner">
+              访问量：<span id="busuanzi_value_site_pv"></span>        
+      </span>
+      <span id="busuanzi_container_site_uv" class="inner">
+        访客数：<span id="busuanzi_value_site_uv"></span>        
+      </span>
+
+      <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+  
+<script src="/js/comment.js" defer id="comment_js_file" data-js="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.min.js" data-css="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.css" data-clientID="9ba1bd4188277cb9c7df" data-clientSecret="e2e110eccbb3e842020b515fc88e88c109ab2340" data-repo="blog-gitalk" data-owner="fanyizhen1995" data-admin="[&quot;fanyizhen1995&quot;]" data-date="250927" data-path="&#x2F;2025&#x2F;09&#x2F;27&#x2F;20250927-gpu-perf-bg-user-guide&#x2F;"></script>
+
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+  <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</body>
+
+</html>

@@ -64,6 +64,79 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-20250927-gpu-perf-bg-user-guide" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2025/09/27/20250927-gpu-perf-bg-user-guide/" class="article-date">
+  <time datetime="2025-09-27T07:38:09.000Z" itemprop="datePublished">2025-09-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2025/09/27/20250927-gpu-perf-bg-user-guide/">GPU Performance Background User&#39;s Guide 笔记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p><a target="_blank" rel="noopener" href="https://docs.nvidia.com/deeplearning/performance/dl-performance-gpu-background/index.html">GPU Performance Background User’s Guide</a> 是英伟达官方写的性能优化背景知识指南。主要介绍了以下几方面内容：</p>
+<ul>
+<li>GPU 基本架构</li>
+<li>GPU 执行模型</li>
+<li>如何评估是 compute bound 还是 memory bound ？</li>
+<li>评估深度学习中常见算子</li>
+</ul>
+<h2 id="GPU-基本架构"><a href="#GPU-基本架构" class="headerlink" title="GPU 基本架构"></a>GPU 基本架构</h2><p><img src="/./20250927-gpu-perf-bg-user-guide/gpu.png" alt="GPU 架构简化视图"></p>
+<p><img src="/./20250927-gpu-perf-bg-user-guide/multi-add-op.svg" alt="每个 SM 每个时钟的乘加运算"></p>
+<p>如何计算计算操作的吞吐率 FLOPS：SM 核数量 * SM 核主频 * 表格中某种类型操作每个时钟周期的乘加运算数量 * 2（乘+加）</p>
+<p><em>example：</em> A100 TF32 FLOPS &#x3D; 1.41 GHz * 108 SM * 512 * 2 ≈ 156 TFLOPS</p>
+<p>图中 SM 核分为 CUDA Cores 和 Tensor Cores，Tensor cores 可以用来对小矩阵块进行操作。非矩阵操作则还是通过 CUDA Cores 来执行</p>
+<h2 id="GPU-执行模型"><a href="#GPU-执行模型" class="headerlink" title="GPU 执行模型"></a>GPU 执行模型</h2><p>因此 GPU 会将计算任务划分成多个 thread-block，每个 thread-block 交给不同 SM 核并发执行。每组并发执行的 thread block 被称为 “wave”。</p>
+<p>可能会存在尾部效应，即最后一组任务用不满 SM 核。所以线程块数量最好是 SM 核的数倍，以满足足够的并行计算利用率。</p>
+<p><img src="/./20250927-gpu-perf-bg-user-guide/utilize-8sm-gpu.svg"></p>
+<h2 id="评估性能瓶颈"><a href="#评估性能瓶颈" class="headerlink" title="评估性能瓶颈"></a>评估性能瓶颈</h2><p>给定一个简化的计算场景：一个函数从内存读取输入，执行计算，将输出写入内存。</p>
+<p>计算耗时：T<sub>math</sub> &#x3D; ops &#x2F; BW<sub>math</sub></p>
+<p>内存IO耗时：T<sub>mem</sub> &#x3D; bytes &#x2F; BW<sub>mem</sub></p>
+<p>Compute bound 场景（反之则为 memory bound）: </p>
+<p>T<sub>math</sub> &gt; T<sub>mem</sub></p>
+<p>ops &#x2F; BW<sub>math</sub> &gt; bytes &#x2F; BW<sub>mem</sub></p>
+<p>ops &#x2F; bytes &gt; BW<sub>math</sub> &#x2F; BW<sub>mem</sub></p>
+<p><em>ops &#x2F; bytes 通常被称为 Arithmetic Intensity，<br>右侧则是规格参数之比</em></p>
+<h2 id="评估深度学习中常见算子"><a href="#评估深度学习中常见算子" class="headerlink" title="评估深度学习中常见算子"></a>评估深度学习中常见算子</h2><p><img src="/./20250927-gpu-perf-bg-user-guide/dl-bound.png" alt="Deeplearning 常见算子性能瓶颈"></p>
+<h2 id="总结评估瓶颈的步骤"><a href="#总结评估瓶颈的步骤" class="headerlink" title="总结评估瓶颈的步骤"></a>总结评估瓶颈的步骤</h2><ol>
+<li><p>查 GPU 规格，还有算子操作数，输入输出大小</p>
+</li>
+<li><p>计算 Arithmetic Intensity</p>
+</li>
+<li><p>估算 thread block 数量和大小。如果 tb 至少比 SM 数量高出大约 4 倍，且每个线程块由几百个线程组成，则并行度很可能够了。</p>
+</li>
+</ol>
+<p>瓶颈相关关键词：计算并行性、compute bound、memory bound</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://fanyizhen1995.github.io/2025/09/27/20250927-gpu-perf-bg-user-guide/" data-id="cmg22d47r00003cgl57s4a0li" class="article-share-link">Share</a>
+      
+        <a href="https://fanyizhen1995.github.io/2025/09/27/20250927-gpu-perf-bg-user-guide/#gitalk_container" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-favorite_site" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2025/09/24/favorite_site/" class="article-date">
@@ -307,7 +380,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/RDMA/" style="font-size: 20px;">RDMA</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/nvidia/" style="font-size: 10px;">nvidia</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 10px;">工具</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 10px;">性能优化</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a>
+      <a href="/tags/RDMA/" style="font-size: 20px;">RDMA</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/nvidia/" style="font-size: 20px;">nvidia</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 10px;">工具</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 20px;">性能优化</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a>
     </div>
   </div>
 
@@ -327,6 +400,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2025/09/27/20250927-gpu-perf-bg-user-guide/">GPU Performance Background User&#39;s Guide 笔记</a>
+          </li>
         
           <li>
             <a href="/2025/09/24/favorite_site/">工具网页收藏</a>
