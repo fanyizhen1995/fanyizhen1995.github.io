@@ -17,8 +17,24 @@
 <meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/ult.png">
 <meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/erf.png">
 <meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/g">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/e-access-pattern-1.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/de-access-pattern-1.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/p-access-pattern-1.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/-service-data-eviction-1536x413.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/tem-timeline-view-1536x257.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/fault.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/fault.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/k-p9-page-fault.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/s-path-zero-copy.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/-x86-pinned.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/-x86-pinned.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/k-p9-pinned.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/ess-path-page-distributed-cpu.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/-x86-gpu-cpu-2MB-page_stripe.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/-x86-gpu-cpu-2MB-page_stripe.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/k-p9-gpu-cpu-2MB-page_stripe.png">
 <meta property="article:published_time" content="2025-10-11T14:45:42.000Z">
-<meta property="article:modified_time" content="2025-10-11T16:20:36.182Z">
+<meta property="article:modified_time" content="2025-10-12T15:56:19.218Z">
 <meta property="article:author" content="Yizhen FAN">
 <meta property="article:tag" content="nvidia">
 <meta property="article:tag" content="gpu">
@@ -109,6 +125,50 @@
 
 <p><img src="/2019/12/27/how-to-write-a-simple-hashmap/g" alt="overlap"></p>
 <h2 id="显存超分（TODO）"><a href="#显存超分（TODO）" class="headerlink" title="显存超分（TODO）"></a>显存超分（TODO）</h2><p>UM 除了简化编程模型之外，他的自动内存搬运能力还能够天然地做到显存超分（oversubscription）的能力，通过 Host 侧内存来拓展 GPU 侧内存上限。不过由于他用到的 page fault 机制，还是需要做好性能优化才能好用。cuda-sample 项目（<a target="_blank" rel="noopener" href="https://github.com/NVIDIA-developer-blog/code-samples/tree/master/posts/unified-memory-oversubscription">Benchmark for UVM oversubscription tests</a>）中包含了对于超分的 microbench。<a target="_blank" rel="noopener" href="https://github.com/NVIDIA-developer-blog/code-samples/tree/master/posts/unified-memory-oversubscription">Benchmark for UVM oversubscription tests</a> 这篇文章做了介绍。</p>
+<h3 id="超分性能测试"><a href="#超分性能测试" class="headerlink" title="超分性能测试"></a>超分性能测试</h3><h4 id="读内存模式"><a href="#读内存模式" class="headerlink" title="读内存模式"></a>读内存模式</h4><p>该 microbench 主要测试了三类模式的内存读取内核：</p>
+<ul>
+<li>Grid-stride：每个竖切是一个 block，顺序读</li>
+</ul>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/e-access-pattern-1.png" alt="grid-stride-access-pattern"></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> data_type&gt;</span></span><br><span class="line"><span class="function"> __global__ <span class="type">void</span> <span class="title">read_thread</span><span class="params">(data_type *ptr, <span class="type">const</span> <span class="type">size_t</span> size)</span></span></span><br><span class="line"><span class="function"> </span>&#123;</span><br><span class="line">     <span class="type">size_t</span> n = size / <span class="built_in">sizeof</span>(data_type);</span><br><span class="line">     data_type accum = <span class="number">0</span>;</span><br><span class="line">  </span><br><span class="line">     <span class="keyword">for</span>(<span class="type">size_t</span> tid = threadIdx.x + blockIdx.x * blockDim.x; tid &lt; n; tid += blockDim.x * gridDim.x)</span><br><span class="line">         accum += ptr[tid];</span><br><span class="line">  </span><br><span class="line">     <span class="keyword">if</span> (threadIdx.x == <span class="number">0</span>)</span><br><span class="line">       ptr[<span class="number">0</span>] = accum;</span><br><span class="line"> &#125; </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>block-stride：每个横切是一个 block，顺序读</li>
+</ul>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/de-access-pattern-1.png" alt="block-stride-access-pattern"></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> data_type&gt;</span></span><br><span class="line"><span class="function"> __global__ <span class="type">void</span> <span class="title">read_thread_blockCont</span><span class="params">(data_type *ptr, <span class="type">const</span> <span class="type">size_t</span> size)</span></span></span><br><span class="line"><span class="function"> </span>&#123;</span><br><span class="line">   <span class="type">size_t</span> n = size / <span class="built_in">sizeof</span>(data_type);</span><br><span class="line">   data_type accum = <span class="number">0</span>;</span><br><span class="line">  </span><br><span class="line">   <span class="type">size_t</span> elements_per_block = ((n + (gridDim.x - <span class="number">1</span>)) / gridDim.x) + <span class="number">1</span>;</span><br><span class="line">   <span class="type">size_t</span> startIdx = elements_per_block * blockIdx.x;</span><br><span class="line">  </span><br><span class="line">   <span class="keyword">for</span> (<span class="type">size_t</span> rid = threadIdx.x; rid &lt; elements_per_block; rid += blockDim.x) &#123;</span><br><span class="line">     <span class="keyword">if</span> ((rid + startIdx) &lt; n)</span><br><span class="line">       accum += ptr[rid + startIdx];</span><br><span class="line">   &#125;</span><br><span class="line">  </span><br><span class="line">   <span class="keyword">if</span> (threadIdx.x == <span class="number">0</span>)</span><br><span class="line">     ptr[<span class="number">0</span>] = accum;</span><br><span class="line"> &#125; </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>random-per-warp：每个 warp 的每个迭代会随机读取一个随机页面。</li>
+</ul>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/p-access-pattern-1.png" alt="random-warp-access-pattern"></p>
+<h4 id="性能结果及优化"><a href="#性能结果及优化" class="headerlink" title="性能结果及优化"></a>性能结果及优化</h4><h5 id="1-基准测试，除了-cudaMallocManaged-之外不做任何其他操作。"><a href="#1-基准测试，除了-cudaMallocManaged-之外不做任何其他操作。" class="headerlink" title="1. 基准测试，除了 cudaMallocManaged 之外不做任何其他操作。"></a>1. 基准测试，除了 <code>cudaMallocManaged</code> 之外不做任何其他操作。</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cudaMallocManaged</span>(&amp;uvm_alloc_ptr, allocation_size);</span><br><span class="line"> <span class="comment">// all the pages are initialized on CPU</span></span><br><span class="line">  </span><br><span class="line"> <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; num_elements; i++)</span><br><span class="line">     uvm_alloc_ptr[i] = <span class="number">0.0f</span>;</span><br></pre></td></tr></table></figure>
+
+<p>在这种情况下，GPU 内存没占满的时候触发 page fault 的流程如左下所示，触发 H2D 的传输；占满的时候如右下所示，会先驱逐其他内存页到 Host 侧，然后再触发 H2D 的数据传输。</p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/-service-data-eviction-1536x413.png" alt="Page-fault-service-data-eviction"></p>
+<p>通过 nsight 观察到的内存执行情况如下所示：</p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/tem-timeline-view-1536x257.png" alt="NVIDIA Nsight system timeline view for execution of grid stride `read_thread` kernel. The HtoD and DtoH transfer shown on memory lines are due to migration and eviction from GPU from page faults."></p>
+<p>性能情况如下，可以看到：</p>
+<ul>
+<li>block-stride 跨页少，触发 page fault 少，是内存访问性能最优的；</li>
+<li>随机读性能远低于顺序读，当然本身这种方式就是会比较慢；</li>
+<li>不同架构由于互联能力和 SM 核数量不一样，触发的换页次数以及对性能的影响页不一样。</li>
+</ul>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/fault.png" alt="v100-page-fault"><br><img src="/2019/12/27/how-to-write-a-simple-hashmap/fault.png" alt="a100-page-fault"><br><img src="/2019/12/27/how-to-write-a-simple-hashmap/k-p9-page-fault.png" alt="v100-nvlink-p9-page-fault"></p>
+<h5 id="2-优化1：通过-cudaMemAdvise-建立-Host-与-Device-之间的映射关系，实现-zero-copy"><a href="#2-优化1：通过-cudaMemAdvise-建立-Host-与-Device-之间的映射关系，实现-zero-copy" class="headerlink" title="2. 优化1：通过 cudaMemAdvise 建立 Host 与 Device 之间的映射关系，实现 zero-copy"></a>2. 优化1：通过 cudaMemAdvise 建立 Host 与 Device 之间的映射关系，实现 zero-copy</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cudaMemAdvise</span>(uvm_alloc_ptr, allocation_size, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId);</span><br><span class="line"> <span class="built_in">cudaMemAdvise</span>(uvm_alloc_ptr, allocation_size, cudaMemAdviseSetAccessedBy, current_gpu_device);</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/s-path-zero-copy.png" alt="Data-access-path-zero-copy"></p>
+<p>可以看到这样性能远高于优化前，能达到读 Host 的性能水平（受限于 CPU-GPU 之间带宽上限）。</p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/-x86-pinned.png" alt="v100-pcie3-x86-pinned"><br><img src="/2019/12/27/how-to-write-a-simple-hashmap/-x86-pinned.png" alt="a100-pcie4-x86-pinned"><br><img src="/2019/12/27/how-to-write-a-simple-hashmap/k-p9-pinned.png" alt="v100-nvlink-p9-pinned"></p>
+<h5 id="3-优化2：CPU-GPU-之间进行-DMA"><a href="#3-优化2：CPU-GPU-之间进行-DMA" class="headerlink" title="3. 优化2：CPU-GPU 之间进行 DMA"></a>3. 优化2：CPU-GPU 之间进行 DMA</h5><p>有两种实现方式：</p>
+<ol>
+<li><code>cudaMemPrefetchAsync</code> + <code>SetAccessedBy</code> hint</li>
+<li>通过 <code>SetPreferredLocation</code> + <code>SetAccessedBy</code> 手动设置对超分部分的内存页设置 hint，建立 CPU-GPU 之间的映射关系</li>
+</ol>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/ess-path-page-distributed-cpu.png" alt="memory-access-path-page-distributed-cpu"></p>
+<p>可以看到这种模式性能能在超分比例小于 1 的情况下达到 GPU 直接读显存的效果，而随着超分比例增大，性能会劣化到读 Host 的性能水平。</p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/-x86-gpu-cpu-2MB-page_stripe.png" alt="v100-pcie3-x86-gpu-cpu-2MB-page_stripe"><br><img src="/2019/12/27/how-to-write-a-simple-hashmap/-x86-gpu-cpu-2MB-page_stripe.png" alt="a100-pcie4-x86-gpu-cpu-2MB-page_stripe"><br><img src="/2019/12/27/how-to-write-a-simple-hashmap/k-p9-gpu-cpu-2MB-page_stripe.png" alt="v100-nvlink-p9-gpu-cpu-2MB-page_stripe"></p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>显存超分简单，性能调优难，需要综合考虑算子 workload、GPU 架构等因素。</p>
 <h2 id="参考引用"><a href="#参考引用" class="headerlink" title="参考引用"></a>参考引用</h2><p><a target="_blank" rel="noopener" href="https://developer.nvidia.com/blog/unified-memory-cuda-beginners/">Unified Memory for CUDA Beginners</a></p>
 <p><a target="_blank" rel="noopener" href="https://developer.nvidia.com/blog/improving-gpu-memory-oversubscription-performance/">Improving GPU Memory Oversubscription Performance</a></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/NVIDIA-developer-blog/code-samples/tree/master/posts/unified-memory-oversubscription">Benchmark for UVM oversubscription tests</a></p>
@@ -129,6 +189,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/2025/10/12/nccl-release-note/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          nccl 版本更新跟踪
+        
+      </div>
+    </a>
   
   
     <a href="/2025/10/01/gpu-specification/" id="article-nav-older" class="article-nav-link-wrap">
@@ -160,7 +229,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/RDMA/" rel="tag">RDMA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gpu/" rel="tag">gpu</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/huawei/" rel="tag">huawei</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java%E5%9F%BA%E7%A1%80/" rel="tag">java基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/memory/" rel="tag">memory</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" rel="tag">持续更新</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">数据结构</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/RDMA/" rel="tag">RDMA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gpu/" rel="tag">gpu</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/huawei/" rel="tag">huawei</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java%E5%9F%BA%E7%A1%80/" rel="tag">java基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/memory/" rel="tag">memory</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nccl/" rel="tag">nccl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" rel="tag">持续更新</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">数据结构</a></li></ul>
     </div>
   </div>
 
@@ -170,7 +239,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/RDMA/" style="font-size: 15px;">RDMA</a> <a href="/tags/gpu/" style="font-size: 15px;">gpu</a> <a href="/tags/huawei/" style="font-size: 10px;">huawei</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/memory/" style="font-size: 10px;">memory</a> <a href="/tags/nvidia/" style="font-size: 20px;">nvidia</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 10px;">工具</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 15px;">性能优化</a> <a href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" style="font-size: 10px;">持续更新</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a>
+      <a href="/tags/RDMA/" style="font-size: 15px;">RDMA</a> <a href="/tags/gpu/" style="font-size: 15px;">gpu</a> <a href="/tags/huawei/" style="font-size: 10px;">huawei</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/memory/" style="font-size: 10px;">memory</a> <a href="/tags/nccl/" style="font-size: 10px;">nccl</a> <a href="/tags/nvidia/" style="font-size: 20px;">nvidia</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 10px;">工具</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 15px;">性能优化</a> <a href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" style="font-size: 15px;">持续更新</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a>
     </div>
   </div>
 
@@ -192,6 +261,10 @@
       <ul>
         
           <li>
+            <a href="/2025/10/12/nccl-release-note/">nccl 版本更新跟踪</a>
+          </li>
+        
+          <li>
             <a href="/2025/10/11/cuda-unified-memory/">cuda unified memory 简介</a>
           </li>
         
@@ -205,10 +278,6 @@
         
           <li>
             <a href="/2025/09/24/favorite_site/">工具网页收藏</a>
-          </li>
-        
-          <li>
-            <a href="/2024/02/12/Tips-and-trick-to-optimize-your-RDMA-code-%E7%AC%94%E8%AE%B0/">RDMA 使用小总结</a>
           </li>
         
       </ul>
