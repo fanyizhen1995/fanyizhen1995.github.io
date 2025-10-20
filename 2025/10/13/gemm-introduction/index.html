@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>GPU 编程简介及优化技巧 | fyz 的个人草稿箱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本文是多篇知乎文章的学习小结： cuda编程(一)：GPU概念与架构 cuda编程(三): Tiling技术 GPU编程优化综述 深入浅出GPU优化系列：GEMM优化（一） 深入浅出GPU优化系列：GEMM优化（二） 深入浅出GPU优化系列：GEMM优化（三）">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GPU 编程简介及优化技巧">
+<meta property="og:url" content="https://fanyizhen1995.github.io/2025/10/13/gemm-introduction/index.html">
+<meta property="og:site_name" content="fyz 的个人草稿箱">
+<meta property="og:description" content="本文是多篇知乎文章的学习小结： cuda编程(一)：GPU概念与架构 cuda编程(三): Tiling技术 GPU编程优化综述 深入浅出GPU优化系列：GEMM优化（一） 深入浅出GPU优化系列：GEMM优化（二） 深入浅出GPU优化系列：GEMM优化（三）">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/693fa1116707e97b70ab513_1440w.jpg">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/005a7c43f0b198df0b595e1_1440w.jpg">
+<meta property="article:published_time" content="2025-10-13T14:35:25.911Z">
+<meta property="article:modified_time" content="2025-10-20T15:37:40.306Z">
+<meta property="article:author" content="Yizhen FAN">
+<meta property="article:tag" content="nvidia">
+<meta property="article:tag" content="cuda">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/693fa1116707e97b70ab513_1440w.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="fyz 的个人草稿箱" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">fyz 的个人草稿箱</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://fanyizhen1995.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-gemm-introduction" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2025/10/13/gemm-introduction/" class="article-date">
+  <time datetime="2025-10-13T14:35:25.911Z" itemprop="datePublished">2025-10-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      GPU 编程简介及优化技巧
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文是多篇知乎文章的学习小结：</p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/367590333">cuda编程(一)：GPU概念与架构</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/367644657">cuda编程(三): Tiling技术</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/1932035570852430148">GPU编程优化综述</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/435908830">深入浅出GPU优化系列：GEMM优化（一）</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/442930482">深入浅出GPU优化系列：GEMM优化（二）</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/481600052">深入浅出GPU优化系列：GEMM优化（三）</a></p>
+<span id="more"></span>
+
+<h1 id="GPU-硬件组成"><a href="#GPU-硬件组成" class="headerlink" title="GPU 硬件组成"></a>GPU 硬件组成</h1><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/367590333">cuda编程(一)：GPU概念与架构</a></p>
+<p>GPU 基本执行单元 <code>stream processor</code>（sp），又叫 core 或者 thread，一般 32 个 sp 组成一个 warp。几个 warp 组成一个 <code>stream multiprocessor</code>（SM），SM 组成 GPU。</p>
+<p>GPU 自带寄存器，同一 SM 中 SP 可以共享 shared memory，constant cache，texture cache，最后所有 sm 可以共用 hbm</p>
+<h2 id="CUDA-编程模型"><a href="#CUDA-编程模型" class="headerlink" title="CUDA 编程模型"></a>CUDA 编程模型</h2><p>编程层次：Gird -》 Block -》 Thread</p>
+<p>包含内置变量 gridDim 表示三维线程网络的大小。内置变量 blockDim 表示线程区块大小，blockIdx 和 threadIdx 表示当前 block&#x2F;thread idx。</p>
+<h2 id="Tiling-技术"><a href="#Tiling-技术" class="headerlink" title="Tiling 技术"></a>Tiling 技术</h2><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/367644657">cuda编程(三): Tiling技术</a></p>
+<p>Tiling 就是利用 shared memory 去降低 device memory 的访问次数。</p>
+<p>从矩阵乘开始说起，首先是 Host 版本的</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">MatrixMulOnHost</span><span class="params">(<span class="type">int</span> m, <span class="type">int</span> n, <span class="type">int</span> k, <span class="type">float</span>* A <span class="type">float</span>* B <span class="type">float</span>* C)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> Row = <span class="number">0</span> Row &lt; m; ++Row)</span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> Col = <span class="number">0</span>; Col &lt; k;++Col) &#123;</span><br><span class="line">            <span class="type">float</span> sum = <span class="number">0</span></span><br><span class="line">            <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; ++i)&#123;</span><br><span class="line">                <span class="type">float</span> a = A[Row*n + i];</span><br><span class="line">                <span class="type">float</span> b = B[Col + i * k ];</span><br><span class="line">                sum += a * b</span><br><span class="line">            &#125;;</span><br><span class="line">            C[Row *k +Col] = sum;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后是 Kernel 版本的：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__global __ <span class="type">void</span> <span class="title">MatrixMulKernel</span><span class="params">(<span class="type">int</span> m, <span class="type">int</span> n, <span class="type">int</span> k, <span class="type">float</span> *A,<span class="type">float</span> *B, <span class="type">float</span>* C)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="type">int</span> Row = blockIdx.y * blockDim.y+ threadIdx.y;</span><br><span class="line"><span class="type">int</span> Col = blockIdx.x* blockDim.x +threadIdx. x;</span><br><span class="line">    <span class="keyword">if</span>((Row&lt; m)&amp;&amp;(Col &lt; k))&#123;</span><br><span class="line">         <span class="type">float</span> Cvalue = <span class="number">0.0</span>;</span><br><span class="line">         <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; n;++i)&#123;</span><br><span class="line">             Cvalue += A[Row*n + i] B[Col+ i * k];</span><br><span class="line">             C[Row*k + Col] = Cvalue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到矩阵 A 和 B 被访问了 n 次。性能优化首先可以将 A 分次从 global memory 加载到 shared memory 中。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__global__ <span class="type">void</span> <span class="title">MatrixMulKernel</span><span class="params">(<span class="type">int</span> *d_M,<span class="type">int</span> *d_N,<span class="type">int</span> *d_P,<span class="type">int</span> m,<span class="type">int</span> n,<span class="type">int</span> k)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  __shared__ <span class="type">int</span> ds_M[TILE_WIDTH][TILE_WIDTH];</span><br><span class="line">  __shared__ <span class="type">int</span> ds_N[TILE_WIDTH][TILE_WIDTH];</span><br><span class="line"></span><br><span class="line">  <span class="type">int</span> bx = blockIdx.x;</span><br><span class="line">  <span class="type">int</span> by = blockIdx.y;</span><br><span class="line"></span><br><span class="line">  <span class="type">int</span> tx = threadIdx.x;</span><br><span class="line">  <span class="type">int</span> ty = threadIdx.y;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//Identify the row and column of the Pd element to work on</span></span><br><span class="line">  <span class="type">int</span> row = by * TILE_WIDTH + ty;</span><br><span class="line">  <span class="type">int</span> col = bx * TILE_WIDTH + tx;</span><br><span class="line"></span><br><span class="line">  <span class="type">int</span> pValue = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//loop over the Md and Nd tiles required to comput the Pd element</span></span><br><span class="line">  <span class="keyword">for</span>(<span class="type">int</span> t = <span class="number">0</span>; t &lt; (n<span class="number">-1</span>) / TILE_WIDTH + <span class="number">1</span>; ++t)</span><br><span class="line">  &#123;</span><br><span class="line">	<span class="keyword">if</span>(row &lt; m &amp;&amp; t * TILE_WIDTH + tx &lt; n)</span><br><span class="line">	  ds_M[ty][tx] = d_M[row * n + t * TILE_WIDTH + tx];</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">	  ds_M[ty][tx] = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span>(col &lt; k &amp;&amp; t * TILE_WIDTH + ty &lt; n)</span><br><span class="line">	  ds_N[ty][tx] = d_N[(t * TILE_WIDTH + ty) * k + col];</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">	  ds_N[ty][tx] = <span class="number">0</span>;</span><br><span class="line">	__syncthreads();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; TILE_WIDTH; ++i)</span><br><span class="line">	  pValue += ds_M[ty][i] * ds_N[i][tx];</span><br><span class="line">	__syncthreads();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span>(row &lt; m &amp;&amp; col &lt; k)</span><br><span class="line">	d_P[row * k + col] = pValue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/693fa1116707e97b70ab513_1440w.jpg"></p>
+<h1 id="GPU-编程优化综述"><a href="#GPU-编程优化综述" class="headerlink" title="GPU 编程优化综述"></a>GPU 编程优化综述</h1><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/1932035570852430148">GPU编程优化综述</a></p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/005a7c43f0b198df0b595e1_1440w.jpg"></p>
+<p>如何使用 shared Memory：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">__shared__ <span class="type">float</span> sdata[<span class="number">256</span>];</span><br><span class="line">sdata[threadIdx.x] = data[threadIdx.x];  <span class="comment">// step 1: write</span></span><br><span class="line">__syncthreads();                         <span class="comment">// step 2: barrier</span></span><br><span class="line">result = sdata[other_idx];               <span class="comment">// step 3: read</span></span><br></pre></td></tr></table></figure>
+
+<p>如何操作 warp 内使用不同线程数操作：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (threadIdx.x % <span class="number">2</span> == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="built_in">do_A</span>();</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">do_B</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Thread block 编程抽象，一个 thread block 被调度到某个 SM 上后，会全程驻留到 SM 核上直到完成。一个 SM 可以运行多个 block，他们的 shared memory 是隔离的。</p>
+<p>Registers 是线程私有的存储空间。当前 GPU 支持 Warp shuffle 允许同一 warp 内线程直接交换寄存器的值，无须写入 shared memory 中。</p>
+<p>warp 并行：</p>
+<ul>
+<li>当一个 warp 发生长延迟操作时，该 warp 会被挂起，调度器立即切换到另一个 ready 的 warp 执行。</li>
+<li>一个 warp 内部有多个独立指令可以重叠执行。</li>
+</ul>
+<h2 id="优化技术"><a href="#优化技术" class="headerlink" title="优化技术"></a>优化技术</h2><h3 id="1-Memory-Access"><a href="#1-Memory-Access" class="headerlink" title="1. Memory Access"></a>1. Memory Access</h3><p>提升访存速率，优化目的时最大化数据重用，最小化对慢速设备内存（Off-chip）的访问，主要分为两类：</p>
+<h4 id="On-chip：高效利用片上资源（shared-memory，register，L1-L2-cache）"><a href="#On-chip：高效利用片上资源（shared-memory，register，L1-L2-cache）" class="headerlink" title="On-chip：高效利用片上资源（shared memory，register，L1&#x2F;L2 cache）"></a>On-chip：高效利用片上资源（shared memory，register，L1&#x2F;L2 cache）</h4><h5 id="shared-memory"><a href="#shared-memory" class="headerlink" title="shared memory"></a>shared memory</h5><p>关键挑战：Bank conflict，shared memory 被划分成多个 bank，如果一个 warp 32 个 thread 访问同一个 bank，会发生冲突，导致串行化访问</p>
+<p>解决方案： padding、reordering data、remap threads to data</p>
+<h5 id="Constant-Memory"><a href="#Constant-Memory" class="headerlink" title="Constant Memory"></a>Constant Memory</h5><p>只读内存，有专用的广播机制<br>用途：存储常量，对所有线程广播，一次访问即可</p>
+<h5 id="Texture-Memory"><a href="#Texture-Memory" class="headerlink" title="Texture Memory"></a>Texture Memory</h5><p>只读内存，针对 2D 空间局部性进行了优化<br>用途：图形应用，但也被用于 GPGPU，如处理边界，缓存不规则访问，自动数据类型转换</p>
+<h5 id="Warp-函数"><a href="#Warp-函数" class="headerlink" title="Warp 函数"></a>Warp 函数</h5><ul>
+<li>Warp-Vote Function:允许 warp 内线程对某个条件进行投票（__any_sync(), __all_sync()），实现五共享内存的快速同步</li>
+<li>Warp-Shuffle(__shfl_sync())：允许 warp 内的线程直接交换寄存器值，无需经过 shared memory。实现了寄存器级别的直接通信。极大地减少了对 shared memory 的依赖和 bank conflict 的可能性。</li>
+</ul>
+<h5 id="寄存器阻塞（Temporal-Blocking）"><a href="#寄存器阻塞（Temporal-Blocking）" class="headerlink" title="寄存器阻塞（Temporal Blocking）"></a>寄存器阻塞（Temporal Blocking）</h5><ul>
+<li>循环中重复使用的数据保存在寄存器中。确保热点变量都驻留在寄存器中</li>
+</ul>
+<h5 id="减少寄存器使用"><a href="#减少寄存器使用" class="headerlink" title="减少寄存器使用"></a>减少寄存器使用</h5><p>过多地使用寄存器会降低 occupancy，导致 register spilling 到全局内存<br>优化技术：</p>
+<ul>
+<li>减少临时变量、使用指针算术</li>
+<li>小数据类型打包</li>
+<li>重计算（常与 Kernel fusion 结合）</li>
+<li>强制编译器限制寄存器使用</li>
+</ul>
+<h4 id="Off-chip：高效访问设备内存"><a href="#Off-chip：高效访问设备内存" class="headerlink" title="Off-chip：高效访问设备内存"></a>Off-chip：高效访问设备内存</h4><h5 id="合并访问"><a href="#合并访问" class="headerlink" title="合并访问"></a>合并访问</h5><p>调整数据布局，从 Array of Structs，转为 Struct of Arrays</p>
+<p>调整线程组织：确保线程 ID 与数据索引对齐<br>使用共享内存作为中转：先用合并方式从全局内存加载到 shared mem 中<br>数据填充，避免 bank conflict 和合并问题</p>
+<h5 id="内核融合（Kernel-Fusion）"><a href="#内核融合（Kernel-Fusion）" class="headerlink" title="内核融合（Kernel Fusion）"></a>内核融合（Kernel Fusion）</h5><p>多个连续执行的小 Kernel 合并成一个大 Kernel</p>
+<h5 id="软件预取"><a href="#软件预取" class="headerlink" title="软件预取"></a>软件预取</h5><p>提前将下一阶段需要的数据从全局内存加载到 shared memory 或寄存器中。<br>常见模式：双缓存，一个 buffer 用于当前计算，另一个用于预取下一阶段的数据</p>
+<h5 id="压缩数据"><a href="#压缩数据" class="headerlink" title="压缩数据"></a>压缩数据</h5><h5 id="预计算-（Precompute）"><a href="#预计算-（Precompute）" class="headerlink" title="预计算 （Precompute）"></a>预计算 （Precompute）</h5><h3 id="2-Irregularity-不规则"><a href="#2-Irregularity-不规则" class="headerlink" title="2. Irregularity 不规则"></a>2. Irregularity 不规则</h3><p>不规则访问，不规则分支，不规则负载</p>
+<h4 id="循环展开（Loop-Unrolling）"><a href="#循环展开（Loop-Unrolling）" class="headerlink" title="循环展开（Loop Unrolling）"></a>循环展开（Loop Unrolling）</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 原循环</span></span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">4</span>; i++) &#123;</span><br><span class="line">    sum += data[i];</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 展开后</span></span><br><span class="line">sum += data[<span class="number">0</span>];</span><br><span class="line">sum += data[<span class="number">1</span>];</span><br><span class="line">sum += data[<span class="number">2</span>];</span><br><span class="line">sum += data[<span class="number">3</span>];</span><br></pre></td></tr></table></figure>
+
+<h4 id="Reduce-Branch-Divergence-（减少分支发散）"><a href="#Reduce-Branch-Divergence-（减少分支发散）" class="headerlink" title="Reduce Branch-Divergence （减少分支发散）"></a>Reduce Branch-Divergence （减少分支发散）</h4><p>问题原因，一个 warp 必须 lock-step，如果 warp 内线程因为 if&#x2F;else 走不同路径，GPU 会串行执行两个分支，未被执行的分支会被屏蔽</p>
+<ul>
+<li><p>优化技术：</p>
+<ul>
+<li>用算术运算&#x2F;查找表替代 if&#x2F;else</li>
+<li>通过排序、分组改变数据布局，相似行为线程聚集一起</li>
+<li>算法展平，避免多重嵌套</li>
+<li>分支分发：公共代码移出分支</li>
+</ul>
+</li>
+</ul>
+<p>评估一个 kernel 的性能时，nsight compute 中的 branch_efficiency 是一个关键指标。理想值接近 100%。</p>
+<h4 id="Sparse-Matrix-Format"><a href="#Sparse-Matrix-Format" class="headerlink" title="Sparse Matrix Format"></a>Sparse Matrix Format</h4><p>需要设计一种数据格式既能压缩存储，又能适应 GPU 并行访问<br>主要格式：</p>
+<ul>
+<li>ELL（ELLPACK）：每行填充至相同长度，形成规则的二维数组</li>
+<li>CSR（Compressed Sparse Row）：存储非零值数组，列索引数组和行指针数组。优点是访问紧凑，缺点是访存不规则，容易导致 warp divergence</li>
+<li>hybrid：结合 ELL 和 CSR 有点</li>
+<li>自适应格式：SELL-C-o，通过排序分块，将相似长度的行分组</li>
+</ul>
+<h4 id="Kernel-Fission（核分裂）"><a href="#Kernel-Fission（核分裂）" class="headerlink" title="Kernel Fission（核分裂）"></a>Kernel Fission（核分裂）</h4><p>将多个 if 分支的复杂 kernel 拆分成几个专门处理特定情况的 Kernel</p>
+<h4 id="减少冗余工作"><a href="#减少冗余工作" class="headerlink" title="减少冗余工作"></a>减少冗余工作</h4><p>循环剪枝等</p>
+<h3 id="3-平衡"><a href="#3-平衡" class="headerlink" title="3. 平衡"></a>3. 平衡</h3><h4 id="指令流平衡"><a href="#指令流平衡" class="headerlink" title="指令流平衡"></a>指令流平衡</h4><h5 id="用-float4-等向量化的数据类型"><a href="#用-float4-等向量化的数据类型" class="headerlink" title="用 float4 等向量化的数据类型"></a>用 <code>float4</code> 等向量化的数据类型</h5><h5 id="Fast-math-function"><a href="#Fast-math-function" class="headerlink" title="Fast math function"></a>Fast math function</h5><p>使用硬件加速的、精度较低但更快的数学函数__sinf()、__expf() 等</p>
+<h5 id="warp-Centric-Programming"><a href="#warp-Centric-Programming" class="headerlink" title="warp-Centric Programming"></a>warp-Centric Programming</h5><p>将warp 作为基本计算和调度单位，而不是单个线程。<br>用 __syncwarp() 替代 __syncthreads()</p>
+<h5 id="调整-block-大小，warp-工作量到均衡"><a href="#调整-block-大小，warp-工作量到均衡" class="headerlink" title="调整 block 大小，warp 工作量到均衡"></a>调整 block 大小，warp 工作量到均衡</h5><h5 id="Load-Balancing"><a href="#Load-Balancing" class="headerlink" title="Load Balancing"></a>Load Balancing</h5><p>Warp 内 ：通过 stream compaction 等技术，让活跃线程聚集。<br>Block 内 ：使用 global worklist 或 work-stealing。<br>SM 间 ：对于不规则应用，使用 persistent threads 模型，让线程长期存活并动态获取任务。</p>
+<h4 id="同步平衡"><a href="#同步平衡" class="headerlink" title="同步平衡"></a>同步平衡</h4><p>减少同步、减少原子操作、通过 Cooperative Groups 允许定义一个跨越多个 block 的线程组，实现跨块同步</p>
+<h3 id="4-CPU-GPU-交互"><a href="#4-CPU-GPU-交互" class="headerlink" title="4. CPU-GPU 交互"></a>4. CPU-GPU 交互</h3><h4 id="主机通信"><a href="#主机通信" class="headerlink" title="主机通信"></a>主机通信</h4><p>减少通信次数、压缩数据、统一内存</p>
+<h5 id="动态并行"><a href="#动态并行" class="headerlink" title="动态并行"></a>动态并行</h5><p>允许 GPU 上线程直接启动新的 Kernel，无需返回 CPU</p>
+<h5 id="优化传输机制"><a href="#优化传输机制" class="headerlink" title="优化传输机制"></a>优化传输机制</h5><ul>
+<li><p>Pinned Memory：提升cudaMemcpy带宽</p>
+</li>
+<li><p>Mapped Memory：主机内存映射到 GPU 地址空间，允许 GPU 直接访问（cudaHostGetDevicePointer）</p>
+</li>
+<li><p>Stream and Overlapping：</p>
+<ul>
+<li>计算通信overlapping、通信-通信 overlapping</li>
+</ul>
+</li>
+<li><p>多 buffer：多个 buffer 多个不同操作并行</p>
+</li>
+</ul>
+<h4 id="CPU-GPU-任务协同"><a href="#CPU-GPU-任务协同" class="headerlink" title="CPU&#x2F;GPU 任务协同"></a>CPU&#x2F;GPU 任务协同</h4><p>分解成多个任务，分配给 CPU GPU 并行执行，让两者负载均衡</p>
+<h2 id="基于特征使用不同优化技术"><a href="#基于特征使用不同优化技术" class="headerlink" title="基于特征使用不同优化技术"></a>基于特征使用不同优化技术</h2><h3 id="计算密集型"><a href="#计算密集型" class="headerlink" title="计算密集型"></a>计算密集型</h3><p>如 FFT、物理模拟</p>
+<p>适用技术 ：<br>Reduce Redundant Work ：避免重复计算，让宝贵的计算资源用在刀刃上。<br>Loop Unrolling ：暴露更多独立指令，提升 ILP。<br>Varying&#x2F;Resize Thread Blocks ：调整并行粒度，更好地利用 SM 资源。<br>Vectorization ：使用 float4 等向量指令，一次完成多个计算。<br>Fast Math Functions ：用精度换速度，减少对 SFU 的占用。<br>Reduce Atomics ：避免昂贵的原子操作阻塞计算流。<br>Auto-tuning ：自动化地搜索最优的配置参数。</p>
+<h3 id="内存密集型"><a href="#内存密集型" class="headerlink" title="内存密集型"></a>内存密集型</h3><p>如向量加法，稀疏矩阵乘</p>
+<p>适用技术 ：<br>Use Dedicated Memories ：用 shared memory 或 texture memory 缓存数据。<br>Coalesced Access ：确保 warp 的访存是合并的。<br>Spatial&#x2F; Register Blocking：通过分块提高数据局部性。<br>Kernel Fusion ：减少 kernel 间的中间结果存储。<br>Software Prefetching ：提前加载数据，隐藏延迟。<br>Use Warp Functions ：用 warp shuffle 替代 shared memory 通信，减少内存压力。<br>Reduce Synchronization ：减少 __syncthreads() 带来的 stalls。<br>Warp-centric Programming ：让 warp 作为工作单元，更好地隐藏内存延迟。</p>
+<h1 id="GEMM-优化"><a href="#GEMM-优化" class="headerlink" title="GEMM 优化"></a>GEMM 优化</h1><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/435908830">深入浅出GPU优化系列：GEMM优化（一）</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/442930482">深入浅出GPU优化系列：GEMM优化（二）</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/481600052">深入浅出GPU优化系列：GEMM优化（三）</a></p>
+<p>技巧1，global-&gt;shared memory，采用了texture内存，将线程划分，一半线程只读A，一半线程只读B。</p>
+<p>技巧2，shared memory-&gt;register，将8×8的读取变成4个4×4的读取，从而避免bank冲突。</p>
+<p>对于Maxwell架构而言，相对来说更加简单一些，bank index即reg_index%4这么一个简单的关系。Pascal架构和Maxwell架构的寄存器bank映射关系一样。而volta架构又有一些不同，在volta之前都是4路的bank，而volta架构变成了2路的bank。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://fanyizhen1995.github.io/2025/10/13/gemm-introduction/" data-id="cmgzar5o000008kgldcyrcryd" class="article-share-link">Share</a>
+      
+        <a href="https://fanyizhen1995.github.io/2025/10/13/gemm-introduction/#gitalk_container" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/cuda/" rel="tag">cuda</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2025/10/12/nccl-release-note/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">nccl 版本更新跟踪</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="gitalk_container">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//gitalk.github.io/">comments powered by GITALK.</a></noscript>
+  </div>
+</section>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/RDMA/" rel="tag">RDMA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/cuda/" rel="tag">cuda</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gpu/" rel="tag">gpu</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/huawei/" rel="tag">huawei</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java%E5%9F%BA%E7%A1%80/" rel="tag">java基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/memory/" rel="tag">memory</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nccl/" rel="tag">nccl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" rel="tag">持续更新</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">数据结构</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/RDMA/" style="font-size: 15px;">RDMA</a> <a href="/tags/cuda/" style="font-size: 10px;">cuda</a> <a href="/tags/gpu/" style="font-size: 15px;">gpu</a> <a href="/tags/huawei/" style="font-size: 10px;">huawei</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/memory/" style="font-size: 10px;">memory</a> <a href="/tags/nccl/" style="font-size: 10px;">nccl</a> <a href="/tags/nvidia/" style="font-size: 20px;">nvidia</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 10px;">工具</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 15px;">性能优化</a> <a href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" style="font-size: 15px;">持续更新</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/10/">October 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/09/">September 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/02/">February 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/10/13/gemm-introduction/">GPU 编程简介及优化技巧</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/12/nccl-release-note/">nccl 版本更新跟踪</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/11/cuda-unified-memory/">cuda unified memory 简介</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/01/gpu-specification/">GPU 规格收集</a>
+          </li>
+        
+          <li>
+            <a href="/2025/09/27/20250927-gpu-perf-bg-user-guide/">GPU Performance Background User&#39;s Guide 笔记</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2025 Yizhen FAN<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+    
+      <!-- 不蒜子统计 -->
+      <span id="busuanzi_container_site_pv" class="inner">
+              访问量：<span id="busuanzi_value_site_pv"></span>        
+      </span>
+      <span id="busuanzi_container_site_uv" class="inner">
+        访客数：<span id="busuanzi_value_site_uv"></span>        
+      </span>
+
+      <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+  
+<script src="/js/comment.js" defer id="comment_js_file" data-js="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.min.js" data-css="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.css" data-clientID="9ba1bd4188277cb9c7df" data-clientSecret="e2e110eccbb3e842020b515fc88e88c109ab2340" data-repo="blog-gitalk" data-owner="fanyizhen1995" data-admin="[&quot;fanyizhen1995&quot;]" data-date="251013" data-path="&#x2F;2025&#x2F;10&#x2F;13&#x2F;gemm-introduction&#x2F;"></script>
+
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+  <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</body>
+
+</html>
