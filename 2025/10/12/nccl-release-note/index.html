@@ -14,10 +14,10 @@
 <meta property="og:site_name" content="fyz 的个人草稿箱">
 <meta property="og:description" content="跟踪 NCCL 新版本重要特性 NCCL Release Notes">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/v-policy.png">
-<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/mory-registration-gpus-nccl-1-png.webp">
-<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/ce-png.webp">
-<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/ison-nccl-2.26-2.27-latency-png.webp">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/12/nccl-release-note/2-28-3-netdev-policy.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/12/nccl-release-note/symmetric-memory-registration-gpus-nccl-1-png.webp">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/12/nccl-release-note/NCCL-AllReduce-png.webp">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/12/nccl-release-note/chart-comparison-nccl-2.26-2.27-latency-png.webp">
 <meta property="article:published_time" content="2025-10-12T15:02:04.000Z">
 <meta property="article:modified_time" content="2025-10-13T15:50:46.196Z">
 <meta property="article:author" content="Yizhen FAN">
@@ -25,7 +25,7 @@
 <meta property="article:tag" content="持续更新">
 <meta property="article:tag" content="nccl">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/v-policy.png">
+<meta name="twitter:image" content="https://fanyizhen1995.github.io/2025/10/12/nccl-release-note/2-28-3-netdev-policy.png">
   
     <link rel="alternate" href="/atom.xml" title="fyz 的个人草稿箱" type="application/atom+xml">
   
@@ -120,7 +120,7 @@
 <li><p>新增 <code>NCCL_NETDEVS_POLICY</code> 环境变量，支持自定义配置使用网卡的数量（以前默认是自动模式）</p>
 </li>
 </ul>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/v-policy.png"></p>
+<p><img src="/2025/10/12/nccl-release-note/2-28-3-netdev-policy.png"></p>
 <h2 id="2-27-3"><a href="#2-27-3" class="headerlink" title="2.27.3"></a>2.27.3</h2><p>技术博客：<a target="_blank" rel="noopener" href="https://developer.nvidia.com/blog/enabling-fast-inference-and-resilient-training-with-nccl-2-27/">enabling-fast-inference-and-resilient-training-with-nccl-2-27</a></p>
 <h3 id="Symmetric-memory-API-和相关实现"><a href="#Symmetric-memory-API-和相关实现" class="headerlink" title="Symmetric memory API 和相关实现"></a>Symmetric memory API 和相关实现</h3><ul>
 <li>添加 symmetric memory API（<code>ncclCommWindowRegister </code>with the <code>NCCL_WIN_COLL_SYMMETRIC</code> flag, <code>ncclCommWindowDeregister</code>）, 默认打开。</li>
@@ -128,8 +128,8 @@
 <p>example：</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ncclCommWindowRegister</span>(ncclComm_t comm, <span class="type">void</span>* buff, <span class="type">size_t</span> size, </span><br><span class="line">ncclWindow_t* win, <span class="type">int</span> winFlags);</span><br><span class="line"> </span><br><span class="line"><span class="built_in">ncclCommWindowDeregister</span>(ncclComm_t comm, ncclWindow_t win);</span><br></pre></td></tr></table></figure>
 
-<p>原理：<br><img src="/2019/12/27/how-to-write-a-simple-hashmap/mory-registration-gpus-nccl-1-png.webp"></p>
-<p>该特性允许不同 GPU 中相同 VA 的 buffer 进行通信加速：<br><img src="/2019/12/27/how-to-write-a-simple-hashmap/ce-png.webp"><br><img src="/2019/12/27/how-to-write-a-simple-hashmap/ison-nccl-2.26-2.27-latency-png.webp" alt="Allreduce 提升效果"></p>
+<p>原理：<br><img src="/2025/10/12/nccl-release-note/symmetric-memory-registration-gpus-nccl-1-png.webp"></p>
+<p>该特性允许不同 GPU 中相同 VA 的 buffer 进行通信加速：<br><img src="/2025/10/12/nccl-release-note/NCCL-AllReduce-png.webp"><br><img src="/2025/10/12/nccl-release-note/chart-comparison-nccl-2.26-2.27-latency-png.webp" alt="Allreduce 提升效果"></p>
 <p>该特性可以被用在DGX&#x2F;HGX&#x2F;NVL72 等系统中的 NVL 域内</p>
 <h3 id="ncclCommShrink"><a href="#ncclCommShrink" class="headerlink" title="ncclCommShrink"></a>ncclCommShrink</h3><ul>
 <li>新增 ncclCommShrink api，支持将一个指定 rank 踢出，创一个新的 communicator。</li>
@@ -145,7 +145,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://fanyizhen1995.github.io/2025/10/12/nccl-release-note/" data-id="cmgnvzxt90000bggl4y8fgb8c" class="article-share-link">Share</a>
+      <a data-url="https://fanyizhen1995.github.io/2025/10/12/nccl-release-note/" data-id="cmh0rego9001afgglay9x94om" class="article-share-link">Share</a>
       
         <a href="https://fanyizhen1995.github.io/2025/10/12/nccl-release-note/#gitalk_container" class="article-comment-link">Comments</a>
       
