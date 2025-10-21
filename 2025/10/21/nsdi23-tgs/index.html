@@ -5,33 +5,30 @@
   
 
   
-  <title>GPU 规格收集 | fyz 的个人草稿箱</title>
+  <title>论文阅读（NSDI23）：Transparent GPU Sharing in Container Clouds for Deep Learning Workloads | fyz 的个人草稿箱</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="收集各类 GPU 的规格参数。">
+  <meta name="description" content="基本信息：Transparent GPU Sharing in Container Clouds for Deep Learning Workloads 代码：TGS  **NSDI 23 **  作者：  Bingyang Wu and Zili Zhang, Peking University;  Zhihao Bai, Johns Hopkins University;  Xuanzhe L">
 <meta property="og:type" content="article">
-<meta property="og:title" content="GPU 规格收集">
-<meta property="og:url" content="https://fanyizhen1995.github.io/2025/10/01/gpu-specification/index.html">
+<meta property="og:title" content="论文阅读（NSDI23）：Transparent GPU Sharing in Container Clouds for Deep Learning Workloads">
+<meta property="og:url" content="https://fanyizhen1995.github.io/2025/10/21/nsdi23-tgs/index.html">
 <meta property="og:site_name" content="fyz 的个人草稿箱">
-<meta property="og:description" content="收集各类 GPU 的规格参数。">
+<meta property="og:description" content="基本信息：Transparent GPU Sharing in Container Clouds for Deep Learning Workloads 代码：TGS  **NSDI 23 **  作者：  Bingyang Wu and Zili Zhang, Peking University;  Zhihao Bai, Johns Hopkins University;  Xuanzhe L">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/ng">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/ol.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/ng">
 <meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/">
 <meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/">
 <meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/">
 <meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/">
 <meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/">
 <meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/">
-<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/">
-<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/png">
-<meta property="og:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/">
-<meta property="article:published_time" content="2025-10-01T11:27:37.000Z">
-<meta property="article:modified_time" content="2025-10-07T10:02:48.149Z">
+<meta property="article:published_time" content="2025-10-21T14:58:05.000Z">
+<meta property="article:modified_time" content="2025-10-21T15:58:00.162Z">
 <meta property="article:author" content="Yizhen FAN">
-<meta property="article:tag" content="nvidia">
-<meta property="article:tag" content="持续更新">
-<meta property="article:tag" content="huawei">
-<meta property="article:tag" content="gpu">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/">
+<meta name="twitter:image" content="https://fanyizhen1995.github.io/2019/12/27/how-to-write-a-simple-hashmap/ng">
   
     <link rel="alternate" href="/atom.xml" title="fyz 的个人草稿箱" type="application/atom+xml">
   
@@ -80,10 +77,10 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-gpu-specification" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-nsdi23-tgs" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2025/10/01/gpu-specification/" class="article-date">
-  <time datetime="2025-10-01T11:27:37.000Z" itemprop="datePublished">2025-10-01</time>
+    <a href="/2025/10/21/nsdi23-tgs/" class="article-date">
+  <time datetime="2025-10-21T14:58:05.000Z" itemprop="datePublished">2025-10-21</time>
 </a>
     
   </div>
@@ -94,7 +91,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      GPU 规格收集
+      论文阅读（NSDI23）：Transparent GPU Sharing in Container Clouds for Deep Learning Workloads
     </h1>
   
 
@@ -102,74 +99,99 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>收集各类 GPU 的规格参数。</p>
-<span id="more"></span>
-
-<h1 id="英伟达系"><a href="#英伟达系" class="headerlink" title="英伟达系"></a>英伟达系</h1><h2 id="ampere-架构"><a href="#ampere-架构" class="headerlink" title="ampere 架构"></a>ampere 架构</h2><h3 id="A100"><a href="#A100" class="headerlink" title="A100"></a>A100</h3><ul>
-<li>发行时间：2020年</li>
+        <h1 id="基本信息："><a href="#基本信息：" class="headerlink" title="基本信息："></a>基本信息：</h1><p><a target="_blank" rel="noopener" href="https://www.usenix.org/conference/nsdi23/presentation/wu">Transparent GPU Sharing in Container Clouds for Deep Learning Workloads</a></p>
+<p>代码：<a target="_blank" rel="noopener" href="https://github.com/pkusys/TGS">TGS</a></p>
+<ul>
+<li><p>**NSDI 23 **</p>
+</li>
+<li><p><strong>作者：</strong></p>
+<ul>
+<li>Bingyang Wu and Zili Zhang, Peking University; </li>
+<li>Zhihao Bai, Johns Hopkins University; </li>
+<li>Xuanzhe Liu and Xin Jin, Peking University</li>
 </ul>
-<p><a target="_blank" rel="noopener" href="https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/a100/pdf/nvidia-a100-datasheet-us-nvidia-1758950-r4-web.pdf">A100 spec</a></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/" alt="a100"></p>
-<h2 id="hopper-架构"><a href="#hopper-架构" class="headerlink" title="hopper 架构"></a>hopper 架构</h2><h3 id="H100"><a href="#H100" class="headerlink" title="H100"></a>H100</h3><ul>
-<li>发行时间: 2022年</li>
+</li>
+<li><p><strong>简介：</strong>针对容器云场景 DL workload GPU 利用率低的问题，提出了 TGS（Transparent GPU Sharing），实现了高 GPU 利用率以及性能隔离。</p>
+</li>
 </ul>
-<p><a target="_blank" rel="noopener" href="https://resources.nvidia.com/en-us-hopper-architecture/nvidia-tensor-core-gpu-datasheet?ncid=no-ncid">H100 spec</a></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/" alt="h100"></p>
-<h3 id="H200"><a href="#H200" class="headerlink" title="H200"></a>H200</h3><ul>
-<li>发行时间：2023年</li>
+<p><strong>关键技术：</strong></p>
+<ul>
+<li>adaptive rate control</li>
+<li>transparent unified memory</li>
 </ul>
-<p><a target="_blank" rel="noopener" href="https://resources.nvidia.com/en-us-hopper-architecture/hpc-datasheet-sc23">H200 spec</a></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/" alt="h200"></p>
-<h2 id="blackwell-架构"><a href="#blackwell-架构" class="headerlink" title="blackwell 架构"></a>blackwell 架构</h2><h3 id="B200"><a href="#B200" class="headerlink" title="B200"></a>B200</h3><ul>
-<li>发行时间：2025年</li>
+<p><strong>效果：</strong></p>
+<ul>
+<li>对于现有生产任务吞吐影响低。</li>
+<li>对于投机任务吞吐可以和 AntMan 媲美。</li>
+<li>吞吐是 MPS 的 15 倍。</li>
 </ul>
-<p><a target="_blank" rel="noopener" href="https://resources.nvidia.com/en-us-blackwell-architecture/datasheet">B200 spec</a></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/" alt="b200"></p>
-<h2 id="华为"><a href="#华为" class="headerlink" title="华为"></a>华为</h2><h3 id="910C"><a href="#910C" class="headerlink" title="910C"></a>910C</h3><ul>
-<li>发行时间：2025年</li>
+<h2 id="背景与动机"><a href="#背景与动机" class="headerlink" title="背景与动机"></a>背景与动机</h2><h3 id="1-在容器云场景中，常见的支持-DL-的做法是容器与-GPU-静态绑定，独占该-GPU。这导致了-GPU-利用率低。"><a href="#1-在容器云场景中，常见的支持-DL-的做法是容器与-GPU-静态绑定，独占该-GPU。这导致了-GPU-利用率低。" class="headerlink" title="1. 在容器云场景中，常见的支持 DL 的做法是容器与 GPU 静态绑定，独占该 GPU。这导致了 GPU 利用率低。"></a>1. 在容器云场景中，常见的支持 DL 的做法是容器与 GPU 静态绑定，独占该 GPU。这导致了 GPU 利用率低。</h3><ul>
+<li><strong>数据：</strong>微软某个生产环境 GPU 集群利用率为 52%；阿里某个集群 GPU 中位数利用率不超过 10%。</li>
 </ul>
-<p><a target="_blank" rel="noopener" href="https://semianalysis.com/2025/04/16/huawei-ai-cloudmatrix-384-chinas-answer-to-nvidia-gb200-nvl72/#">910c cloud matrix 384</a></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/" alt="910c"></p>
-<h3 id="950PR-950DT"><a href="#950PR-950DT" class="headerlink" title="950PR&#x2F;950DT"></a>950PR&#x2F;950DT</h3><ul>
-<li>发行时间：2026年</li>
+<h3 id="2-生产环境中-DNN-训练任务通常分为两类，需要保证任务之间不互相影响："><a href="#2-生产环境中-DNN-训练任务通常分为两类，需要保证任务之间不互相影响：" class="headerlink" title="2. 生产环境中 DNN 训练任务通常分为两类，需要保证任务之间不互相影响："></a>2. 生产环境中 DNN 训练任务通常分为两类，需要保证任务之间不互相影响：</h3><ul>
+<li>生产任务（production jobs）：需要保证性能</li>
+<li>投机性任务（opportunistic jobs）：利用闲散资源</li>
 </ul>
-<p><a target="_blank" rel="noopener" href="https://www.ithome.com/0/883/839.htm">950 news</a></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/" alt="950pr"><br><img src="/2019/12/27/how-to-write-a-simple-hashmap/" alt="950dt"><br><img src="/2019/12/27/how-to-write-a-simple-hashmap/png" alt="950-roadmap"></p>
-<h2 id="平头哥"><a href="#平头哥" class="headerlink" title="平头哥"></a>平头哥</h2><h3 id="PPU"><a href="#PPU" class="headerlink" title="PPU"></a>PPU</h3><ul>
-<li>时间：2025年</li>
+<h3 id="3-先前解决方案局限性"><a href="#3-先前解决方案局限性" class="headerlink" title="3. 先前解决方案局限性"></a>3. 先前解决方案局限性</h3><ul>
+<li>AntMan：应用层解决方案，需要与框架结合</li>
+<li>MPS：OS 层解决方案，需要感知到应用行为，不支持显存超分场景下的 GPU 共享，多个进程之间不能进行故障隔离。</li>
+<li>MIG：需要 GPU 硬件支持，无法动态分配。</li>
 </ul>
-<p><a target="_blank" rel="noopener" href="https://www.eet-china.com/news/202509177867.html">ppu新闻</a></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/" alt="ppu"></p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/ng"></p>
+<h2 id="TGS-设计与实现"><a href="#TGS-设计与实现" class="headerlink" title="TGS 设计与实现"></a>TGS 设计与实现</h2><h3 id="TGS-架构"><a href="#TGS-架构" class="headerlink" title="TGS 架构"></a>TGS 架构</h3><p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
+<h4 id="adaptive-rate-control"><a href="#adaptive-rate-control" class="headerlink" title="adaptive rate control"></a>adaptive rate control</h4><ul>
+<li>GPU 共享场景不适用基于优先级队列的任务调度方案，因为 GPU kernel 在 GPU 执行的时候，任务队列可能是空的。</li>
+<li>TGS 核心思想：根据生产任务 kernel 到达速率，控制投机型任务下发 kernel 速率。</li>
+</ul>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/ol.png"></p>
+<ul>
+<li>通过 additive increase multiplicative decrease (AIMD) 方式控制投机型任务的速率</li>
+</ul>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/ng"></p>
+<ul>
+<li>TGS 使用了一个全局计数器来记录特定时间内启动的 CUDA block 数量，以此作为控制速率的信号。</li>
+</ul>
+<h4 id="transparent-unified-memory"><a href="#transparent-unified-memory" class="headerlink" title="transparent unified memory"></a>transparent unified memory</h4><ul>
+<li>利用 UVM api 做超分。</li>
+<li>优先为生产任务分配 GPU 内存。当 GPU 内存占满时，TGS 会将投机型任务驱逐到 Host 侧内存上。</li>
+</ul>
+<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><p>3k LoC 的 C++ 和 python，与 Docker 和 K8s 做了集成。</p>
+<h3 id="评估"><a href="#评估" class="headerlink" title="评估"></a>评估</h3><ul>
+<li><p><strong>Testbed：</strong>Intel Xeon Silver 4210R CPU，2块 A100 40G GPU，126G 内存。</p>
+</li>
+<li><p>**Trace: **Philly Trace from Microsoft [Jeon et al. 2019]</p>
+</li>
+<li><p><strong>workload：</strong></p>
+<p>  • CV: ResNet, ShuffleNet, MobileNet<br>  • Graph: GCN<br>  • NLP: Bert, GPT-2<br>  • Recommendation: DLRM</p>
+</li>
+<li><p><strong>实验对比项：</strong>每个 workload 运行 100s 测吞吐（iter&#x2F;second），吞吐方差和 JCT（job completion time）。</p>
+</li>
+</ul>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
+<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://fanyizhen1995.github.io/2025/10/01/gpu-specification/" data-id="cmggdvwmi0000d0glfkdo2gt5" class="article-share-link">Share</a>
+      <a data-url="https://fanyizhen1995.github.io/2025/10/21/nsdi23-tgs/" data-id="cmh0qtt5g00001wgl8rre4l5r" class="article-share-link">Share</a>
       
-        <a href="https://fanyizhen1995.github.io/2025/10/01/gpu-specification/#gitalk_container" class="article-comment-link">Comments</a>
+        <a href="https://fanyizhen1995.github.io/2025/10/21/nsdi23-tgs/#gitalk_container" class="article-comment-link">Comments</a>
       
       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/gpu/" rel="tag">gpu</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/huawei/" rel="tag">huawei</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" rel="tag">持续更新</a></li></ul>
-
     </footer>
   </div>
   
     
 <nav id="article-nav">
   
-    <a href="/2025/10/11/cuda-unified-memory/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          cuda unified memory 简介
-        
-      </div>
-    </a>
   
-  
-    <a href="/2025/09/27/20250927-gpu-perf-bg-user-guide/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2025/10/13/gemm-introduction/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">GPU Performance Background User&#39;s Guide 笔记</div>
+      <div class="article-nav-title">GPU 编程简介及优化技巧</div>
     </a>
   
 </nav>
@@ -288,7 +310,7 @@
 </nav>
     
   
-<script src="/js/comment.js" defer id="comment_js_file" data-js="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.min.js" data-css="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.css" data-clientID="9ba1bd4188277cb9c7df" data-clientSecret="e2e110eccbb3e842020b515fc88e88c109ab2340" data-repo="blog-gitalk" data-owner="fanyizhen1995" data-admin="[&quot;fanyizhen1995&quot;]" data-date="251001" data-path="&#x2F;2025&#x2F;10&#x2F;01&#x2F;gpu-specification&#x2F;"></script>
+<script src="/js/comment.js" defer id="comment_js_file" data-js="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.min.js" data-css="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.css" data-clientID="9ba1bd4188277cb9c7df" data-clientSecret="e2e110eccbb3e842020b515fc88e88c109ab2340" data-repo="blog-gitalk" data-owner="fanyizhen1995" data-admin="[&quot;fanyizhen1995&quot;]" data-date="251021" data-path="&#x2F;2025&#x2F;10&#x2F;21&#x2F;nsdi23-tgs&#x2F;"></script>
 
 
 
