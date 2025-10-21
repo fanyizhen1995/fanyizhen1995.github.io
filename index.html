@@ -112,55 +112,11 @@
 <li>对于投机任务吞吐可以和 AntMan 媲美。</li>
 <li>吞吐是 MPS 的 15 倍。</li>
 </ul>
-<h2 id="背景与动机"><a href="#背景与动机" class="headerlink" title="背景与动机"></a>背景与动机</h2><h3 id="1-在容器云场景中，常见的支持-DL-的做法是容器与-GPU-静态绑定，独占该-GPU。这导致了-GPU-利用率低。"><a href="#1-在容器云场景中，常见的支持-DL-的做法是容器与-GPU-静态绑定，独占该-GPU。这导致了-GPU-利用率低。" class="headerlink" title="1. 在容器云场景中，常见的支持 DL 的做法是容器与 GPU 静态绑定，独占该 GPU。这导致了 GPU 利用率低。"></a>1. 在容器云场景中，常见的支持 DL 的做法是容器与 GPU 静态绑定，独占该 GPU。这导致了 GPU 利用率低。</h3><ul>
-<li><strong>数据：</strong>微软某个生产环境 GPU 集群利用率为 52%；阿里某个集群 GPU 中位数利用率不超过 10%。</li>
-</ul>
-<h3 id="2-生产环境中-DNN-训练任务通常分为两类，需要保证任务之间不互相影响："><a href="#2-生产环境中-DNN-训练任务通常分为两类，需要保证任务之间不互相影响：" class="headerlink" title="2. 生产环境中 DNN 训练任务通常分为两类，需要保证任务之间不互相影响："></a>2. 生产环境中 DNN 训练任务通常分为两类，需要保证任务之间不互相影响：</h3><ul>
-<li>生产任务（production jobs）：需要保证性能</li>
-<li>投机性任务（opportunistic jobs）：利用闲散资源</li>
-</ul>
-<h3 id="3-先前解决方案局限性"><a href="#3-先前解决方案局限性" class="headerlink" title="3. 先前解决方案局限性"></a>3. 先前解决方案局限性</h3><ul>
-<li>AntMan：应用层解决方案，需要与框架结合</li>
-<li>MPS：OS 层解决方案，需要感知到应用行为，不支持显存超分场景下的 GPU 共享，多个进程之间不能进行故障隔离。</li>
-<li>MIG：需要 GPU 硬件支持，无法动态分配。</li>
-</ul>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/ng"></p>
-<h2 id="TGS-设计与实现"><a href="#TGS-设计与实现" class="headerlink" title="TGS 设计与实现"></a>TGS 设计与实现</h2><h3 id="TGS-架构"><a href="#TGS-架构" class="headerlink" title="TGS 架构"></a>TGS 架构</h3><p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
-<h4 id="adaptive-rate-control"><a href="#adaptive-rate-control" class="headerlink" title="adaptive rate control"></a>adaptive rate control</h4><ul>
-<li>GPU 共享场景不适用基于优先级队列的任务调度方案，因为 GPU kernel 在 GPU 执行的时候，任务队列可能是空的。</li>
-<li>TGS 核心思想：根据生产任务 kernel 到达速率，控制投机型任务下发 kernel 速率。</li>
-</ul>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/ol.png"></p>
-<ul>
-<li>通过 additive increase multiplicative decrease (AIMD) 方式控制投机型任务的速率</li>
-</ul>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/ng"></p>
-<ul>
-<li>TGS 使用了一个全局计数器来记录特定时间内启动的 CUDA block 数量，以此作为控制速率的信号。</li>
-</ul>
-<h4 id="transparent-unified-memory"><a href="#transparent-unified-memory" class="headerlink" title="transparent unified memory"></a>transparent unified memory</h4><ul>
-<li>利用 UVM api 做超分。</li>
-<li>优先为生产任务分配 GPU 内存。当 GPU 内存占满时，TGS 会将投机型任务驱逐到 Host 侧内存上。</li>
-</ul>
-<h4 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h4><p>3k LoC 的 C++ 和 python，与 Docker 和 K8s 做了集成。</p>
-<h3 id="评估"><a href="#评估" class="headerlink" title="评估"></a>评估</h3><ul>
-<li><p><strong>Testbed：</strong>Intel Xeon Silver 4210R CPU，2块 A100 40G GPU，126G 内存。</p>
-</li>
-<li><p>**Trace: **Philly Trace from Microsoft [Jeon et al. 2019]</p>
-</li>
-<li><p><strong>workload：</strong></p>
-<p>  • CV: ResNet, ShuffleNet, MobileNet<br>  • Graph: GCN<br>  • NLP: Bert, GPT-2<br>  • Recommendation: DLRM</p>
-</li>
-<li><p><strong>实验对比项：</strong>每个 workload 运行 100s 测吞吐（iter&#x2F;second），吞吐方差和 JCT（job completion time）。</p>
-</li>
-</ul>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
-<p><img src="/2019/12/27/how-to-write-a-simple-hashmap/"></p>
-
+        
+          <p class="article-more-link">
+            <a href="/2025/10/21/nsdi23-tgs/#more">Read More</a>
+          </p>
+        
       
     </div>
     <footer class="article-footer">
@@ -169,6 +125,8 @@
         <a href="https://fanyizhen1995.github.io/2025/10/21/nsdi23-tgs/#gitalk_container" class="article-comment-link">Comments</a>
       
       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/GPU%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="tag">GPU虚拟化</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/gpu/" rel="tag">gpu</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+
     </footer>
   </div>
   
@@ -644,7 +602,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/RDMA/" rel="tag">RDMA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/cuda/" rel="tag">cuda</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gpu/" rel="tag">gpu</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/huawei/" rel="tag">huawei</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java%E5%9F%BA%E7%A1%80/" rel="tag">java基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/memory/" rel="tag">memory</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nccl/" rel="tag">nccl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" rel="tag">持续更新</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">数据结构</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/GPU%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="tag">GPU虚拟化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RDMA/" rel="tag">RDMA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/cuda/" rel="tag">cuda</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gpu/" rel="tag">gpu</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/huawei/" rel="tag">huawei</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java%E5%9F%BA%E7%A1%80/" rel="tag">java基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/memory/" rel="tag">memory</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nccl/" rel="tag">nccl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" rel="tag">持续更新</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">数据结构</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
     </div>
   </div>
 
@@ -654,7 +612,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/RDMA/" style="font-size: 15px;">RDMA</a> <a href="/tags/cuda/" style="font-size: 10px;">cuda</a> <a href="/tags/gpu/" style="font-size: 15px;">gpu</a> <a href="/tags/huawei/" style="font-size: 10px;">huawei</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/memory/" style="font-size: 10px;">memory</a> <a href="/tags/nccl/" style="font-size: 10px;">nccl</a> <a href="/tags/nvidia/" style="font-size: 20px;">nvidia</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 10px;">工具</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 15px;">性能优化</a> <a href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" style="font-size: 15px;">持续更新</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a>
+      <a href="/tags/GPU%E8%99%9A%E6%8B%9F%E5%8C%96/" style="font-size: 10px;">GPU虚拟化</a> <a href="/tags/RDMA/" style="font-size: 13.33px;">RDMA</a> <a href="/tags/cuda/" style="font-size: 10px;">cuda</a> <a href="/tags/gpu/" style="font-size: 16.67px;">gpu</a> <a href="/tags/huawei/" style="font-size: 10px;">huawei</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/memory/" style="font-size: 10px;">memory</a> <a href="/tags/nccl/" style="font-size: 10px;">nccl</a> <a href="/tags/nvidia/" style="font-size: 20px;">nvidia</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 10px;">工具</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 13.33px;">性能优化</a> <a href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" style="font-size: 13.33px;">持续更新</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 10px;">论文</a>
     </div>
   </div>
 
