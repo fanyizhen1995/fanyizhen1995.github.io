@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>论文阅读（SOSP25）LithOS:An Operating Systemfor Efficient Machine Learning on GPUs | fyz 的个人草稿箱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="基本信息论文地址：https:&#x2F;&#x2F;dl.acm.org&#x2F;doi&#x2F;pdf&#x2F;10.1145&#x2F;3731569.3764818 - 作者： - Patrick H. Coppock, Brian Zhang, Eliot H. Solomon, Vasilis Kypriotis, Leon Yang†, Bikash Sharma†,  Dan Schatzberg†, Todd C. Mowry, a">
+<meta property="og:type" content="article">
+<meta property="og:title" content="论文阅读（SOSP25）LithOS:An Operating Systemfor Efficient Machine Learning on GPUs">
+<meta property="og:url" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/index.html">
+<meta property="og:site_name" content="fyz 的个人草稿箱">
+<meta property="og:description" content="基本信息论文地址：https:&#x2F;&#x2F;dl.acm.org&#x2F;doi&#x2F;pdf&#x2F;10.1145&#x2F;3731569.3764818 - 作者： - Patrick H. Coppock, Brian Zhang, Eliot H. Solomon, Vasilis Kypriotis, Leon Yang†, Bikash Sharma†,  Dan Schatzberg†, Todd C. Mowry, a">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/mps.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/meta-util.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/meta-infer.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/lithos-arch.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/lithos-op.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/tpc.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/lithos-feature.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/workload1.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/workload2.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/eval1.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/eval2.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/eval3.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/eval4.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/eval5.png">
+<meta property="article:published_time" content="2025-10-22T14:33:41.000Z">
+<meta property="article:modified_time" content="2025-10-22T16:10:33.132Z">
+<meta property="article:author" content="Yizhen FAN">
+<meta property="article:tag" content="nvidia">
+<meta property="article:tag" content="gpu">
+<meta property="article:tag" content="GPU虚拟化">
+<meta property="article:tag" content="论文">
+<meta property="article:tag" content="sosp">
+<meta property="article:tag" content="操作系统">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/mps.png">
+  
+    <link rel="alternate" href="/atom.xml" title="fyz 的个人草稿箱" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">fyz 的个人草稿箱</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://fanyizhen1995.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-lithos-sosp25" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2025/10/22/lithos-sosp25/" class="article-date">
+  <time datetime="2025-10-22T14:33:41.000Z" itemprop="datePublished">2025-10-22</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      论文阅读（SOSP25）LithOS:An Operating Systemfor Efficient Machine Learning on GPUs
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="基本信息"><a href="#基本信息" class="headerlink" title="基本信息"></a>基本信息</h1><p><strong>论文地址：</strong><a target="_blank" rel="noopener" href="https://dl.acm.org/doi/pdf/10.1145/3731569.3764818">https://dl.acm.org/doi/pdf/10.1145/3731569.3764818</a></p>
+<p><strong>- 作者：</strong></p>
+<pre><code>- Patrick H. Coppock, Brian Zhang, Eliot H. Solomon, Vasilis Kypriotis, Leon Yang†, Bikash Sharma†,
+</code></pre>
+<p>Dan Schatzberg†, Todd C. Mowry, and Dimitrios Skarlatos<br>    - Carnegie Mellon University， †Meta</p>
+<p><strong>- 简介：</strong>针对 GPU 在生产服务中利用率低，能耗高，隔离性差的问题，提出面向 GPU 场景的操作系统 lithOS。<br><strong>- 关键技术：</strong></p>
+<pre><code>- a novel TPC Scheduler 支持任务空分复用
+- a transparent kernel atomizer 减少头阻塞，允许在执行过程中动态分配资源
+- a lightweight hardware right-sizing mechanism 动态确定每个原子所需的最小 TPC 资源
+- a transparent power management mechanism 电源管理机制，降功耗
+</code></pre>
+<p><strong>- 效果</strong></p>
+<pre><code>- 推理任务：相比 MPS 将尾时延降低 13 倍，相比 SOTA 将尾时延降低 4.7 倍，有效吞吐提升 1.3 倍
+- 训练推理混布场景：相比 MPS 将尾时延降低 4.7 倍，相比 SOTA 将尾时延降低 1.18 倍，有效吞吐提升 1.35 倍
+- 在性能损失不超过 4% 的情况下，GPU 资源节省 25%。
+- 在性能损失不超过 7% 的情况下，GPU 能耗节省 25%。
+</code></pre>
+<span id="more"></span>
+
+<h1 id="背景与动机"><a href="#背景与动机" class="headerlink" title="背景与动机"></a>背景与动机</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><ol>
+<li><p>各大厂 GPU 利用率很低，微软 <a target="_blank" rel="noopener" href="https://www.usenix.org/conference/atc19/presentation/jeon">52%</a>，阿里 10%，Meta 推理服务利用率低于 30%，训练 <a target="_blank" rel="noopener" href="https://arxiv.org/abs/2407.21783">40%</a></p>
+</li>
+<li><p>GPU 任务通常被分为 latency-critical (LC) 型和 best-effort (BE) 型。在 LC 和 BE 任务争抢资源时，现有系统不能针对优先执行 LC 任务这点提出很好的解决方案，且许多方法缺乏透明度。</p>
+</li>
+</ol>
+<h2 id="现有解决方案"><a href="#现有解决方案" class="headerlink" title="现有解决方案"></a>现有解决方案</h2><ul>
+<li>TGS，Clockwork：无法并行执行多个模型</li>
+<li>MPS，MIG，REEF，Orion：支持多个应用并行执行，但粒度过于粗糙，会对整个推理请求，训练批次或 DNN 算子进行调度，导致利用率低、头阻塞问题。</li>
+</ul>
+<p><img src="/2025/10/22/lithos-sosp25/mps.png"></p>
+<h2 id="动机"><a href="#动机" class="headerlink" title="动机"></a>动机</h2><ul>
+<li><p>观测了 meta 跑在 H100 上的推理服务运行情况，发现：</p>
+<ul>
+<li><p>设备利用率在 25% - 60% 之间，SM 利用率低于 15%，内存也通常不会占满。为了保证 SLA，会采用小 batch size，这样 GPU 利用情况会比较稳定。表明多租场景有利用率提升空间<br>  <img src="/2025/10/22/lithos-sosp25/meta-util.png"></p>
+</li>
+<li><p>推理流量情况呈现昼夜周期重复迹象，大小模型都可能有比较高的使用频率。表明不同模型之间根据模型大小、使用频率进行排列组合搭配使用是有收益的。</p>
+</li>
+</ul>
+<p>  <img src="/2025/10/22/lithos-sosp25/meta-infer.png"></p>
+</li>
+</ul>
+<h1 id="LithOS-设计与实现"><a href="#LithOS-设计与实现" class="headerlink" title="LithOS 设计与实现"></a>LithOS 设计与实现</h1><p>像操作系统那样对于任务进行调度可以有效提高资源利用率，降低功耗。所以 GPU 管理模式必须向操作系统模型演进。</p>
+<p><img src="/2025/10/22/lithos-sosp25/lithos-arch.png"></p>
+<p><img src="/2025/10/22/lithos-sosp25/lithos-op.png"></p>
+<h2 id="TPC-scheduler"><a href="#TPC-scheduler" class="headerlink" title="TPC scheduler"></a>TPC scheduler</h2><ul>
+<li>LithOS 任务运行粒度是 kernel thread block 级别，会被动态映射到 GPU 的 Texture Processing Clusters (TPCs)，LithOS 以 TPC 为粒度来管理资源。</li>
+</ul>
+<blockquote>
+<p>TPC 是什么？<br>GPU 架构：数个 Graphics Processing Clusters (GPCs) -》数个 TPC -》几个 SM 核<br>比如 H100 组成：8 GPC -》 9 TPC -》 2 SM -》 128 cores</p>
+</blockquote>
+<p><img src="/2025/10/22/lithos-sosp25/tpc.png"></p>
+<ul>
+<li><p>latency prediction module：通过在线学习并预测每个 atom 执行时间，从而指导调度器进行 tpc stealing 利用空闲的 TPC。</p>
+<ul>
+<li>调度器只允许执行时间非常短的 atom 去做 tpc stealing</li>
+</ul>
+</li>
+<li><p>拓展了 libsmctrl.so 来操作 TPC 映射</p>
+</li>
+</ul>
+<h2 id="Kernel-Atomizer："><a href="#Kernel-Atomizer：" class="headerlink" title="Kernel Atomizer："></a>Kernel Atomizer：</h2><ul>
+<li>LithOS 通过 Prelude Kernel 技术，在 Kernel 启动前会将其分解为 thread block 来进行独立调度执行，每个 tb 被称为 atom。</li>
+<li>高优先级任务到来时，调度器等当前 atom 完成后就优先执行高优先级任务，做到模拟抢占</li>
+<li>修改了启动内核的 QMP struct 来注入 prelude 逻辑。</li>
+</ul>
+<p><img src="/2025/10/22/lithos-sosp25/lithos-feature.png"></p>
+<h2 id="hardware-right-sizing-mechanism"><a href="#hardware-right-sizing-mechanism" class="headerlink" title="hardware right-sizing mechanism"></a>hardware right-sizing mechanism</h2><ul>
+<li>基于一个只需要两个数据点的并行计算模型（l &#x3D; m&#x2F;t + b）进行在线建模，来知道每个 Kernel 性能随 TPC 变化的曲线，从而做到硬件资源精简，限制分配上限。</li>
+</ul>
+<h2 id="transparent-power-management-mechanism"><a href="#transparent-power-management-mechanism" class="headerlink" title="transparent power management mechanism"></a>transparent power management mechanism</h2><ul>
+<li>GPU 在执行内存密集型任务可以降频省电。</li>
+<li>通过 sequence-based kernel frequency scaling model，计算一系列 kernel 的统一目标频率</li>
+</ul>
+<h2 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h2><ul>
+<li>~5k LoC Rust</li>
+</ul>
+<h1 id="评估"><a href="#评估" class="headerlink" title="评估"></a>评估</h1><ul>
+<li><p><strong>Testbed：</strong> 1 40G A100，30 CPU，216G 内存</p>
+</li>
+<li><p><strong>workload：</strong></p>
+</li>
+</ul>
+<p><img src="/2025/10/22/lithos-sosp25/workload1.png"><br><img src="/2025/10/22/lithos-sosp25/workload2.png"></p>
+<p><img src="/2025/10/22/lithos-sosp25/eval1.png"><br><img src="/2025/10/22/lithos-sosp25/eval2.png"><br><img src="/2025/10/22/lithos-sosp25/eval3.png"><br><img src="/2025/10/22/lithos-sosp25/eval4.png"><br><img src="/2025/10/22/lithos-sosp25/eval5.png"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/" data-id="cmh26wlqi0000y0gl0u931c7q" class="article-share-link">Share</a>
+      
+        <a href="https://fanyizhen1995.github.io/2025/10/22/lithos-sosp25/#gitalk_container" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/GPU%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="tag">GPU虚拟化</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/gpu/" rel="tag">gpu</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/sosp/" rel="tag">sosp</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag">操作系统</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2025/10/21/nsdi23-tgs/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">论文阅读（NSDI23）：Transparent GPU Sharing in Container Clouds for Deep Learning Workloads</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="gitalk_container">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//gitalk.github.io/">comments powered by GITALK.</a></noscript>
+  </div>
+</section>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/GPU%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="tag">GPU虚拟化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RDMA/" rel="tag">RDMA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/cuda/" rel="tag">cuda</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gpu/" rel="tag">gpu</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/huawei/" rel="tag">huawei</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java%E5%9F%BA%E7%A1%80/" rel="tag">java基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/memory/" rel="tag">memory</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nccl/" rel="tag">nccl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nsdi/" rel="tag">nsdi</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sosp/" rel="tag">sosp</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" rel="tag">持续更新</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag">操作系统</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">数据结构</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/GPU%E8%99%9A%E6%8B%9F%E5%8C%96/" style="font-size: 13.33px;">GPU虚拟化</a> <a href="/tags/RDMA/" style="font-size: 13.33px;">RDMA</a> <a href="/tags/cuda/" style="font-size: 10px;">cuda</a> <a href="/tags/gpu/" style="font-size: 16.67px;">gpu</a> <a href="/tags/huawei/" style="font-size: 10px;">huawei</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/memory/" style="font-size: 10px;">memory</a> <a href="/tags/nccl/" style="font-size: 10px;">nccl</a> <a href="/tags/nsdi/" style="font-size: 10px;">nsdi</a> <a href="/tags/nvidia/" style="font-size: 20px;">nvidia</a> <a href="/tags/sosp/" style="font-size: 10px;">sosp</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 10px;">工具</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 13.33px;">性能优化</a> <a href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" style="font-size: 13.33px;">持续更新</a> <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" style="font-size: 10px;">操作系统</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 13.33px;">论文</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/10/">October 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/09/">September 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/02/">February 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/10/22/lithos-sosp25/">论文阅读（SOSP25）LithOS:An Operating Systemfor Efficient Machine Learning on GPUs</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/21/nsdi23-tgs/">论文阅读（NSDI23）：Transparent GPU Sharing in Container Clouds for Deep Learning Workloads</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/13/gemm-introduction/">GPU 编程简介及优化技巧</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/12/nccl-release-note/">nccl 版本更新跟踪</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/11/cuda-unified-memory/">cuda unified memory 简介</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2025 Yizhen FAN<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+    
+      <!-- 不蒜子统计 -->
+      <span id="busuanzi_container_site_pv" class="inner">
+              访问量：<span id="busuanzi_value_site_pv"></span>        
+      </span>
+      <span id="busuanzi_container_site_uv" class="inner">
+        访客数：<span id="busuanzi_value_site_uv"></span>        
+      </span>
+
+      <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+  
+<script src="/js/comment.js" defer id="comment_js_file" data-js="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.min.js" data-css="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.css" data-clientID="9ba1bd4188277cb9c7df" data-clientSecret="e2e110eccbb3e842020b515fc88e88c109ab2340" data-repo="blog-gitalk" data-owner="fanyizhen1995" data-admin="[&quot;fanyizhen1995&quot;]" data-date="251022" data-path="&#x2F;2025&#x2F;10&#x2F;22&#x2F;lithos-sosp25&#x2F;"></script>
+
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+  <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</body>
+
+</html>
