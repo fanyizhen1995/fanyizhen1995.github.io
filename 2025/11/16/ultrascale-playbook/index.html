@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>ultrascale-playbook 阅读笔记(1) —— 基础概念，单卡训练 | fyz 的个人草稿箱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="https:&#x2F;&#x2F;huggingface.co&#x2F;spaces&#x2F;Ki-Seki&#x2F;ultrascale-playbook-zh-cn 介绍 LLM 分布式训练中所使用的技术">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ultrascale-playbook 阅读笔记(1) —— 基础概念，单卡训练">
+<meta property="og:url" content="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/index.html">
+<meta property="og:site_name" content="fyz 的个人草稿箱">
+<meta property="og:description" content="https:&#x2F;&#x2F;huggingface.co&#x2F;spaces&#x2F;Ki-Seki&#x2F;ultrascale-playbook-zh-cn 介绍 LLM 分布式训练中所使用的技术">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/model-train.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/LLM-training-mem.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/LLM-total-mem.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/calc-act.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/llm-model-act.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/recomputation.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/recomputation-res.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/profile_trace_annotated.png">
+<meta property="article:published_time" content="2025-11-16T06:54:45.000Z">
+<meta property="article:modified_time" content="2025-11-16T08:17:50.915Z">
+<meta property="article:author" content="Yizhen FAN">
+<meta property="article:tag" content="训练推理">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/model-train.png">
+  
+    <link rel="alternate" href="/atom.xml" title="fyz 的个人草稿箱" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">fyz 的个人草稿箱</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+          <a class="main-nav-link" href="/about">About</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://fanyizhen1995.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-ultrascale-playbook" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2025/11/16/ultrascale-playbook/" class="article-date">
+  <time datetime="2025-11-16T06:54:45.000Z" itemprop="datePublished">2025-11-16</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      ultrascale-playbook 阅读笔记(1) —— 基础概念，单卡训练
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a target="_blank" rel="noopener" href="https://huggingface.co/spaces/Ki-Seki/ultrascale-playbook-zh-cn">https://huggingface.co/spaces/Ki-Seki/ultrascale-playbook-zh-cn</a></p>
+<p>介绍 LLM 分布式训练中所使用的技术</p>
+<span id="more"></span>
+
+<h1 id="单卡训练"><a href="#单卡训练" class="headerlink" title="单卡训练"></a>单卡训练</h1><p>单卡训练基本流程</p>
+<ul>
+<li>前向传播（forward pass）：输入模型以数据，得到输出</li>
+<li>反向传播（backward pass）：计算梯度</li>
+<li>优化步骤（optimizer step）：利用梯度更新参数</li>
+</ul>
+<p><img src="/2025/11/16/ultrascale-playbook/model-train.png"></p>
+<ul>
+<li>Batch size</li>
+</ul>
+<p>Batch size（bs）是模型训练中重要的超参，会影响模型收敛及吞吐<br>小 bs 有利于训练初期快速更新权重，且梯度带有随机性，但训练后期，小 bs 可能使梯度噪音过大无法收敛。<br>bs 过大，虽然可以让梯度估计更精确，但每次更新代价增大，影响效率</p>
+<p>—— 参考 <a target="_blank" rel="noopener" href="https://arxiv.org/pdf/1812.06162">OpenAI 大 bs 训练论文</a>，或 <a target="_blank" rel="noopener" href="https://filecdn.minimax.chat/_Arxiv_MiniMax_01_Report.pdf">MiniMax-01 技术报告</a></p>
+<p>LLM 预训练中， bs 通常会用 token 而不是样本量来表示（bst &#x3D; Batch Size Tokens）。最简单的单机训练场景中，bs 和 bst 可以通过序列长度相互转换：</p>
+<pre><code>bst = bs * seq
+</code></pre>
+<p>常见的 bs 大小：Llama 1 大约用 4M bst，训练了 1.4T token 数据；deepseek 用 60M bst 训练了 14T token。</p>
+<h2 id="Transformer-中显存的使用"><a href="#Transformer-中显存的使用" class="headerlink" title="Transformer 中显存的使用"></a>Transformer 中显存的使用</h2><p>训练中一般需要占用显存的(其他还有零散的需要占用显存的固定开销暂不考虑)：</p>
+<ul>
+<li>模型权重（weights）</li>
+<li>模型梯度（gradients）</li>
+<li>优化器状态（optimizer states）</li>
+<li>用于反向传播的激活值（activations）</li>
+</ul>
+<p>这些一般以张量形式存在，不同张量有不同形状 shape 和精度 precision。</p>
+<p>决定形状的超参因素： bs、seq len、模型隐层维度、注意力头数、词表大小、是否进行模型切分等<br>精度：FP32、BF16、FP8 等</p>
+<p><img src="/2025/11/16/ultrascale-playbook/LLM-training-mem.png" alt="实际显存占用"></p>
+<ul>
+<li>前向传播时，随着激活值的产生，显存快速上涨</li>
+<li>反向传播时，梯度逐渐累加，用于计算梯度的激活逐步释放</li>
+<li>优化步骤时，需要所有梯度，然后更新优化器状态</li>
+</ul>
+<p>第一步里激活快速增加，然后有一段时间保持在高位。这是因为 Torch 的 allocator 要初始化分配显存块，虽有训练步骤中不必再频繁搜索可用显存（<a target="_blank" rel="noopener" href="https://zdevito.github.io/2022/08/04/cuda-caching-allocator.html">Zach 博客</a>）。第一步结束后，还需要为优化器状态分配显存。</p>
+<h3 id="估算-LLM-训练中显存占用"><a href="#估算-LLM-训练中显存占用" class="headerlink" title="估算 LLM 训练中显存占用"></a>估算 LLM 训练中显存占用</h3><p><a target="_blank" rel="noopener" href="https://michaelwornow.net/2024/01/18/counting-params-in-transformer">参数量估算公式</a>：</p>
+<pre><code>N = h * v + L * (12 * h^2 + 13 * h) + 2 * h
+</code></pre>
+<p>其中 h 是隐层维度，v 是词表大小，L 是层数。</p>
+<p>如果以 FP32 (4 byte)进行训练，优化器使用 Adam，则总显存占用：</p>
+<p>M<sub>params</sub> &#x3D; 4 * N<br>M<sub>grads</sub> &#x3D; 4 * N<br>M<sub>opt</sub> &#x3D; (4 + 4) * N</p>
+<p>如果采用混合精度 BF16，则参数和梯度需要 2 byte，同时保留一份 FP32 的权重和梯度副本，因此每个参数需要 12 byte。优化器状态通常为了稳定性考虑，也是以 FP32 进行存储：</p>
+<p>M<sub>params</sub> &#x3D; 2 * N<br>M<sub>grads</sub> &#x3D; 2 * N<br>M<sub>params_fp32</sub> &#x3D; 4 * N<br>M<sub>opt</sub> &#x3D; (4 + 4) * N</p>
+<blockquote>
+<p>有些库会把梯度以 FP32 额外存储一份，则需要额外 M<sub>params_fp32</sub> &#x3D; 4 * N 空间，目的是为了稳定性，防止混合精度对较小值的损害。<br>有时会把这份权重副本称作“master weights”。</p>
+</blockquote>
+<p>混合精度本身可能并不会减少总体显存需求，甚至如果多保存一份梯度副本的话，整体开销还会涨。但低精度前向&#x2F;反向计算速度变快了，且前向中激活占用减少了。这在大 bs 或长序列中尤为重要。</p>
+<p>常见模型存储量级：</p>
+<p><img src="/2025/11/16/ultrascale-playbook/LLM-total-mem.png"></p>
+<p>可以看见 7B 以上规模时，仅权重和优化器状态就已经超过许多 GPU 显存了。</p>
+<h3 id="激活值占用"><a href="#激活值占用" class="headerlink" title="激活值占用"></a>激活值占用</h3><p>激活值需要在反向传播时用来计算梯度。它的占用会受到输入影响。激活值占用参考估算 <a target="_blank" rel="noopener" href="https://arxiv.org/pdf/2205.05198">Nvidia 重计算论文</a>：</p>
+<p><img src="/2025/11/16/ultrascale-playbook/calc-act.png"></p>
+<p>激活值占用会随序列长度 seq 及 bs 线性增长：</p>
+<p><img src="/2025/11/16/ultrascale-playbook/llm-model-act.png"></p>
+<p>可以看到，对于大输入 tokens，激活值是主要负担,可采用<strong>激活重计算（Activation Recomputation）</strong>来限制显存占用。</p>
+<h4 id="激活重计算（Activation-recomputation）"><a href="#激活重计算（Activation-recomputation）" class="headerlink" title="激活重计算（Activation recomputation）"></a>激活重计算（Activation recomputation）</h4><p>前向传播时丢弃部分激活值，在反向传播时再做一次子前向过程计算回来。</p>
+<p><img src="/2025/11/16/ultrascale-playbook/recomputation.png"></p>
+<p>实际实施的时候有以下几种策略来决定哪些激活需要保存：</p>
+<ul>
+<li>Full 重计算：每层 transformer 中只保存输出激活值，舍弃中间激活。这样相当于在反向时重跑轮前向，大约多 30-40% 计算量,但完全消除了激活值的显存占用。</li>
+<li>Selective 重计算：<a target="_blank" rel="noopener" href="https://arxiv.org/pdf/2205.05198">Nvidia 重计算论文</a>对激活值大小与重计算 FLOPs 成本进行分析后发现，attention 的激活值往往更大，且其重计算所需 FLOPs 相对 feedforward 更少。比如对 GPT-3 （175B）模型来说，可以在 2.7% 额外计算成本下减少 70% 的激活值显存。</li>
+<li>DSv3 使用了 Multi-Head Latent Attention（MLA）进一步优化激活内存。</li>
+</ul>
+<p><img src="/2025/11/16/ultrascale-playbook/recomputation-res.png"></p>
+<p>越小模型（h 较小）在长序列（seq）较大下，激活值占比越大，重计算收益越明显</p>
+<blockquote>
+<p>在测量利用率时，一般要把重计算计算量纳入总 FLOPs 中，再和理论峰值 FLOPs 进行对比，以得到实际硬件 FLOPs 利用率（Hardware FLOPS Utilization, HFU）<br>但我们往往更关注端到端训练所需总时间。对于有足够显存能跳过重计算的硬件来说，HFU 降低了，但训练速度更快。因此仅统计模型本身前后项所需 FLOPs 来计算 Model FLOPs Utilization（MFU）更有意义。</p>
+</blockquote>
+<p>当今训练框架中，FlashAttention 已经成为了注意力优化的标配，它在反向传播中就会自动重算注意力得分和中间矩阵，而不存储它们，这本质上时 selective 重计算的一种。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>激活重计算用 2-30% FLOPs 的代价换来了显存占用大幅降低。</p>
+<h3 id="梯度累加（gradient-accumulation）——-优化大-global-batch-size-下的峰值内存"><a href="#梯度累加（gradient-accumulation）——-优化大-global-batch-size-下的峰值内存" class="headerlink" title="梯度累加（gradient accumulation）—— 优化大 global batch size 下的峰值内存"></a>梯度累加（gradient accumulation）—— 优化大 global batch size 下的峰值内存</h3><p>梯度累加用于避免过大 bs 导致的显存爆炸。它做法是：将原本一次大 batch 拆成多个更小的 micro-batch 分别进行前后向计算梯度，然后将梯度累加起来再汇总做一次优化器更新（optimizer.step）。</p>
+<p>每次前向使用的 bs 称为 micro batich size（mbs），全局 batch size （两次 optimizer step 之间）称为 global batch size（gbs）：</p>
+<pre><code>bs = gbs = mbs * grad_acc
+</code></pre>
+<h4 id="梯度累加的-trade-off"><a href="#梯度累加的-trade-off" class="headerlink" title="梯度累加的 trade-off"></a>梯度累加的 trade-off</h4><p>通过多次前反向计算，减少激活峰值内存占用（存储累计梯度需要点额外缓冲区占用）。<br>不过每个 mbs 实际上是可以并行运行，前反向传播彼此独立，唯一区别在于输入样本是独立的。</p>
+<h2 id="Pytorch-profiler-——-可视化计算和通信情况"><a href="#Pytorch-profiler-——-可视化计算和通信情况" class="headerlink" title="Pytorch profiler —— 可视化计算和通信情况"></a>Pytorch profiler —— 可视化计算和通信情况</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">with</span> torch.profiler.profile(</span><br><span class="line">    activities=[</span><br><span class="line">        torch.profiler.ProfilerActivity.CPU,</span><br><span class="line">        torch.profiler.ProfilerActivity.CUDA,</span><br><span class="line">    ],</span><br><span class="line">    schedule=torch.profiler.schedule(wait=<span class="number">1</span>, warmup=<span class="number">1</span>, active=<span class="number">3</span>),</span><br><span class="line">    on_trace_ready=torch.profiler.tensorboard_trace_handler(<span class="string">&#x27;./log/profile&#x27;</span>),</span><br><span class="line">    with_stack=<span class="literal">True</span></span><br><span class="line">) <span class="keyword">as</span> prof:</span><br><span class="line">    <span class="keyword">for</span> step <span class="keyword">in</span> <span class="built_in">range</span>(steps):</span><br><span class="line">        train_step() </span><br><span class="line">        prof.step()</span><br></pre></td></tr></table></figure>
+
+<p>这会生成一份 trace，可以在 TensorBoard 或 Chrome tracing viewer 中查看：<br><img src="/2025/11/16/ultrascale-playbook/profile_trace_annotated.png"></p>
+<p>- </p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/" data-id="cmi1e9c510000qsglfgkrg4lk" class="article-share-link">Share</a>
+      
+        <a href="https://fanyizhen1995.github.io/2025/11/16/ultrascale-playbook/#gitalk_container" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E8%AE%AD%E7%BB%83%E6%8E%A8%E7%90%86/" rel="tag">训练推理</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2025/10/28/ai-infra-index/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">ai infra 知识地图索引</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="gitalk_container">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//gitalk.github.io/">comments powered by GITALK.</a></noscript>
+  </div>
+</section>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/GPU%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="tag">GPU虚拟化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RDMA/" rel="tag">RDMA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/cuda/" rel="tag">cuda</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gpu/" rel="tag">gpu</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/huawei/" rel="tag">huawei</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java%E5%9F%BA%E7%A1%80/" rel="tag">java基础</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/memory/" rel="tag">memory</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nccl/" rel="tag">nccl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nsdi/" rel="tag">nsdi</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/sosp/" rel="tag">sosp</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E5%B7%A5%E5%85%B7/" rel="tag">工具</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag">性能优化</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" rel="tag">持续更新</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag">操作系统</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag">数据结构</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%AD%E7%BB%83%E6%8E%A8%E7%90%86/" rel="tag">训练推理</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/GPU%E8%99%9A%E6%8B%9F%E5%8C%96/" style="font-size: 13.33px;">GPU虚拟化</a> <a href="/tags/RDMA/" style="font-size: 13.33px;">RDMA</a> <a href="/tags/cuda/" style="font-size: 10px;">cuda</a> <a href="/tags/gpu/" style="font-size: 16.67px;">gpu</a> <a href="/tags/huawei/" style="font-size: 10px;">huawei</a> <a href="/tags/java%E5%9F%BA%E7%A1%80/" style="font-size: 10px;">java基础</a> <a href="/tags/memory/" style="font-size: 10px;">memory</a> <a href="/tags/nccl/" style="font-size: 10px;">nccl</a> <a href="/tags/nsdi/" style="font-size: 10px;">nsdi</a> <a href="/tags/nvidia/" style="font-size: 20px;">nvidia</a> <a href="/tags/sosp/" style="font-size: 10px;">sosp</a> <a href="/tags/%E5%B7%A5%E5%85%B7/" style="font-size: 13.33px;">工具</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 13.33px;">性能优化</a> <a href="/tags/%E6%8C%81%E7%BB%AD%E6%9B%B4%E6%96%B0/" style="font-size: 13.33px;">持续更新</a> <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" style="font-size: 10px;">操作系统</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" style="font-size: 10px;">数据结构</a> <a href="/tags/%E8%AE%AD%E7%BB%83%E6%8E%A8%E7%90%86/" style="font-size: 10px;">训练推理</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 13.33px;">论文</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/11/">November 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/10/">October 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/09/">September 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/02/">February 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/12/">December 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/11/16/ultrascale-playbook/">ultrascale-playbook 阅读笔记(1) —— 基础概念，单卡训练</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/28/ai-infra-index/">ai infra 知识地图索引</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/22/lithos-sosp25/">论文阅读（SOSP25）LithOS:An Operating Systemfor Efficient Machine Learning on GPUs</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/21/nsdi23-tgs/">论文阅读（NSDI23）：Transparent GPU Sharing in Container Clouds for Deep Learning Workloads</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/13/gemm-introduction/">GPU 编程简介及优化技巧</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2025 Yizhen FAN<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+    
+      <!-- 不蒜子统计 -->
+      <span id="busuanzi_container_site_pv" class="inner">
+              访问量：<span id="busuanzi_value_site_pv"></span>        
+      </span>
+      <span id="busuanzi_container_site_uv" class="inner">
+        访客数：<span id="busuanzi_value_site_uv"></span>        
+      </span>
+
+      <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+    <a href="/about" class="mobile-nav-link">About</a>
+  
+</nav>
+    
+  
+<script src="/js/comment.js" defer id="comment_js_file" data-js="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.min.js" data-css="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.css" data-clientID="9ba1bd4188277cb9c7df" data-clientSecret="e2e110eccbb3e842020b515fc88e88c109ab2340" data-repo="blog-gitalk" data-owner="fanyizhen1995" data-admin="[&quot;fanyizhen1995&quot;]" data-date="251116" data-path="&#x2F;2025&#x2F;11&#x2F;16&#x2F;ultrascale-playbook&#x2F;"></script>
+
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+  
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+  </div>
+  <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</body>
+
+</html>
