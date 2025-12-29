@@ -5,15 +5,30 @@
   
 
   
-  <title>Tag: nsdi | fyz 的个人草稿箱</title>
+  <title>NCCL-GIN 特性介绍 | fyz 的个人草稿箱</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="fyz 的个人草稿箱">
-<meta property="og:url" content="https://fanyizhen1995.github.io/tags/nsdi/index.html">
+  <meta name="description" content="GPU-Initiated Networking for NCCL NCCL 2.28 版本支持了在 Device 侧直接发起通信的 KI-GDA 能力，性能和通过 NVSHMEM 实现的基本一致。 本文是对其技术报告的笔记总结。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NCCL-GIN 特性介绍">
+<meta property="og:url" content="https://fanyizhen1995.github.io/2025/12/29/nccl-gin/index.html">
 <meta property="og:site_name" content="fyz 的个人草稿箱">
+<meta property="og:description" content="GPU-Initiated Networking for NCCL NCCL 2.28 版本支持了在 Device 侧直接发起通信的 KI-GDA 能力，性能和通过 NVSHMEM 实现的基本一致。 本文是对其技术报告的笔记总结。">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/12/29/nccl-gin/nccl-gin-arch.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/12/29/nccl-gin/gin-api.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/nccl-gin/gin-arch.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/12/29/nccl-gin/gin-backend.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/12/29/nccl-gin/gin-api-header.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/12/29/nccl-gin/gin-usage.png">
+<meta property="og:image" content="https://fanyizhen1995.github.io/2025/12/29/nccl-gin/gin-ibgda-comp.png">
+<meta property="article:published_time" content="2025-12-29T14:40:33.000Z">
+<meta property="article:modified_time" content="2025-12-29T14:58:05.248Z">
 <meta property="article:author" content="Yizhen FAN">
+<meta property="article:tag" content="nvidia">
+<meta property="article:tag" content="nccl">
+<meta property="article:tag" content="network">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://fanyizhen1995.github.io/2025/12/29/nccl-gin/nccl-gin-arch.png">
   
     <link rel="alternate" href="/atom.xml" title="fyz 的个人草稿箱" type="application/atom+xml">
   
@@ -62,39 +77,100 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2025" class="archive-year">2025</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2025/10/21/nsdi23-tgs/" class="archive-article-date">
-  <time datetime="2025-10-21T14:58:05.000Z" itemprop="datePublished">Oct 21</time>
+        <section id="main"><article id="post-nccl-gin" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2025/12/29/nccl-gin/" class="article-date">
+  <time datetime="2025-12-29T14:40:33.000Z" itemprop="datePublished">2025-12-29</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2025/10/21/nsdi23-tgs/">论文阅读（NSDI23）：Transparent GPU Sharing in Container Clouds for Deep Learning Workloads</a>
+    <h1 class="article-title" itemprop="name">
+      NCCL-GIN 特性介绍
     </h1>
   
 
-    </header>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2511.15076">GPU-Initiated Networking for NCCL</a></p>
+<p>NCCL 2.28 版本支持了在 Device 侧直接发起通信的 KI-GDA 能力，性能和通过 NVSHMEM 实现的基本一致。</p>
+<p>本文是对其技术报告的笔记总结。</p>
+<span id="more"></span>
+
+<h2 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h2><p><img src="/2025/12/29/nccl-gin/nccl-gin-arch.png"></p>
+<p><strong>Device API 新的三种操作：</strong></p>
+<ul>
+<li><strong>LSA load&#x2F;store accessible memory:</strong> get, remote memory load&#x2F;store，用在 PCIe 或者 NVLink</li>
+<li><strong>multimem nvlink sharp：</strong> get，remote mem load&#x2F;reduce 操作，用在 nvlink</li>
+<li><strong>GIN：</strong> put signal，wait signal，wait counter，用在 network</li>
+</ul>
+<p><img src="/2025/12/29/nccl-gin/gin-api.png"><br><img src="/nccl-gin/gin-arch.png"></p>
+<p>GIN 可以用新的 single shot 集合通信算法，或者直接用 device api 原语</p>
+<h2 id="GIN-特性细节："><a href="#GIN-特性细节：" class="headerlink" title="GIN 特性细节："></a>GIN 特性细节：</h2><ul>
+<li>支持线程级&#x2F;warp级操作，imm 操作，window-based mem addr，local counter &#x2F;remote signal同步机制</li>
+<li>proxy：lock-free GPU-CPU 的 64 byte descriptors queue</li>
+<li>GDAKI：使用 DOCA GPUNetIO backend</li>
+<li>使用 window mem，每个rank有一块 local buffer 和 receives handles。每个 rank 都必须注册自己的 comm buff，遵循 MPI RMA window model。每个 rank 支持注册不同大小的 buff（比如 prefill 更大，decode 更小），但当前 2.28 版本不支持</li>
+<li>和 DeepEP 做了集成，证明能和 NVSHMEM 有近似的性能</li>
+<li>走 GDAKI 需要依赖 CX6 以上的网卡或者 BlueField 系列 DPU，不然只能降级成 proxy 模式</li>
+<li>GIN 还需要依赖 nv_peer_mem 内核模块来使能 GDA，还有 OFED</li>
+<li>GPU 和 NIC 在同一 pcie root complex 能性能最好（DGX 那种一个 GPU 和一个 NIC 绑定那种）</li>
+<li>基于单边操作，提供 put、put with signal 接口</li>
+<li>proxy 接口下，NCCL core 实现控制面结构，任务队列，device api impl；plugin 定义 put、signal、test、tegMr 接口</li>
+<li>GDAKI 接口下，plugin 通过 createContext 创建 gpu ctx，数据面借助 Kernel-initiated API</li>
+<li>网络，不同 ctx 使用不同网卡，不同 qp，不同 stream</li>
+<li>本地完成通知 counters，本地发送完成计数器，表明发送 buffer 用完了；flush 所有操作都已经 posted to the ctx</li>
+<li>远端完成通知 signal，使用 ID-based addressing，用 id 来标识自己（替代 openshmem 都 address-based sync）</li>
+<li>GIN 操作是乱序的，只有同一 ctx 下的 put 和 signal 操作是保序的（多个 put + signal）</li>
+<li>flush 操作只保证本地操作是完成的，远端收没收到不保证</li>
+<li>GDAKI 实现细节：put 操作发起时，gpu 线程写 wqe，然后写 nic db。cq 是 gpu-visible mem 上的</li>
+<li>proxy 实现细节：put 操作时，GPU thread enqueue op descriptor int lock-free queue。CPU 线程 poll 队列，通过 iput&#x2F;iput signal 接口来发包。在 GPU-visible mem 中更新完成状态</li>
+</ul>
+<p><img src="/2025/12/29/nccl-gin/gin-backend.png" alt="GIN 后端比对"></p>
+<h2 id="API-及使用"><a href="#API-及使用" class="headerlink" title="API 及使用"></a>API 及使用</h2><p><img src="/2025/12/29/nccl-gin/gin-api-header.png" alt="api 定义"></p>
+<p><img src="/2025/12/29/nccl-gin/gin-usage.png" alt="使用方式"></p>
+<p><img src="/2025/12/29/nccl-gin/gin-ibgda-comp.png" alt="GIN 和 NVSHMEM 比对"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://fanyizhen1995.github.io/2025/12/29/nccl-gin/" data-id="cmjraa3ks0000oogl2k5n79h9" class="article-share-link">Share</a>
+      
+        <a href="https://fanyizhen1995.github.io/2025/12/29/nccl-gin/#gitalk_container" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nccl/" rel="tag">nccl</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/network/" rel="tag">network</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nvidia/" rel="tag">nvidia</a></li></ul>
+
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2025/11/16/ultrascale-playbook/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">ultrascale-playbook 阅读笔记(1) —— 基础概念，单卡训练</div>
+    </a>
+  
+</nav>
+
+  
 </article>
-  
-  
-    </div></section>
-  
+
+
+<section id="comments">
+  <div id="gitalk_container">
+    <noscript>Please enable JavaScript to view the <a target="_blank" rel="noopener" href="//gitalk.github.io/">comments powered by GITALK.</a></noscript>
+  </div>
+</section>
 
 
 </section>
@@ -199,6 +275,10 @@
   
 </nav>
     
+  
+<script src="/js/comment.js" defer id="comment_js_file" data-js="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.min.js" data-css="&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;gitalk@1.7.2&#x2F;dist&#x2F;gitalk.css" data-clientID="9ba1bd4188277cb9c7df" data-clientSecret="e2e110eccbb3e842020b515fc88e88c109ab2340" data-repo="blog-gitalk" data-owner="fanyizhen1995" data-admin="[&quot;fanyizhen1995&quot;]" data-date="251229" data-path="&#x2F;2025&#x2F;12&#x2F;29&#x2F;nccl-gin&#x2F;"></script>
+
+
 
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
